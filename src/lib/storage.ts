@@ -40,3 +40,9 @@ export async function uploadChapterPhoto(chapterId: string, file: File): Promise
 
   return path
 }
+
+/** Admin-only: zmaže súbory fotiek (pri mazaní blokov, aby v Storage neostávali siroty). */
+export async function removeChapterPhotos(storagePaths: string[]): Promise<void> {
+  if (storagePaths.length === 0) return
+  await supabase.storage.from(BUCKET).remove(storagePaths)
+}

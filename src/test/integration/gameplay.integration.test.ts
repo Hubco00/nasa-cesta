@@ -109,6 +109,44 @@ describe.skipIf(!isLocalSupabaseUp)(
       expect(pins).toEqual([])
     })
 
+    it('otázka v obsahu: server overí odpoveď, pamätá si vyriešenie, odpovede hráčka nevidí', async () => {
+      const QUESTION_BLOCK = '00000000-0000-0000-0000-000000000215'
+
+      const wrong = await player.rpc('verify_block_answer', {
+        p_block_id: QUESTION_BLOCK,
+        p_answer: 'Čaj',
+      })
+      expect(wrong.error).toBeNull()
+      expect(wrong.data).toMatchObject({ correct: false })
+
+      const right = await player.rpc('verify_block_answer', {
+        p_block_id: QUESTION_BLOCK,
+        p_answer: '  kávu ',
+      })
+      expect(right.data).toMatchObject({ correct: true })
+
+      const { data: progress } = await player
+        .from('player_block_progress')
+        .select('solved_at, attempt_count')
+        .eq('block_id', QUESTION_BLOCK)
+        .single()
+      expect(progress?.solved_at).not.toBeNull()
+      expect(progress?.attempt_count).toBe(2)
+
+      const { data: playerAnswers } = await player
+        .from('chapter_answers')
+        .select('correct_answers')
+        .eq('block_id', QUESTION_BLOCK)
+      expect(playerAnswers).toEqual([])
+
+      const { data: adminAnswers } = await admin
+        .from('chapter_answers')
+        .select('correct_answers')
+        .eq('block_id', QUESTION_BLOCK)
+        .single()
+      expect(adminAnswers?.correct_answers).toEqual(['Kávu'])
+    })
+
     it('nepublikovaná kapitola sa hráčke nezobrazí', async () => {
       const draftId = crypto.randomUUID()
       const { error: insertError } = await admin.from('chapters').insert({

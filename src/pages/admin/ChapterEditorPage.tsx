@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Layout } from '../../components/Layout'
-import { BlockEditor } from '../../features/admin/BlockEditor'
+import { ContentManager } from '../../features/admin/content/ContentManager'
 import { ConditionsEditor } from '../../features/admin/ConditionsEditor'
 import { MapPinsEditor } from '../../features/admin/MapPinsEditor'
 import { QrTokenEditor } from '../../features/admin/QrTokenEditor'
 import {
   adminCreateChapter,
+  adminGetChapterAnswer,
   adminGetChapter,
   adminListChapters,
   adminSetChapterAnswer,
@@ -58,6 +59,7 @@ export function ChapterEditorPage() {
   const [radius, setRadius] = useState('150')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(isNew)
 
   useEffect(() => {
     void adminListChapters().then(setAllChapters)
@@ -86,6 +88,11 @@ export function ChapterEditorPage() {
       } | null
       setMaxAttempts(qc?.maxAttempts?.toString() ?? '')
       setLoading(false)
+      if (row.unlock_type === 'question') {
+        void adminGetChapterAnswer(row.id).then((answers) => {
+          if (answers) setAnswer(answers.join(', '))
+        })
+      }
     })
   }, [id, isNew])
 
@@ -185,214 +192,241 @@ export function ChapterEditorPage() {
         )}
       </div>
 
-      <h1 className="mb-4 font-[family-name:var(--font-display)] text-xl">
-        {isNew ? 'Nová kapitola' : 'Upraviť kapitolu'}
+      <h1 className="mb-1 font-[family-name:var(--font-display)] text-xl">
+        {isNew ? 'Nová kapitola' : chapter?.title}
       </h1>
-
-      <div className="flex flex-col gap-3 rounded-2xl bg-[var(--color-surface)] p-4 shadow-sm">
-        <label className="flex flex-col gap-1 text-sm">
-          Názov
-          <input
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value)
-              if (isNew) setSlug(slugify(e.target.value))
-            }}
-            className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          Slug (URL)
-          <input
-            value={slug}
-            onChange={(e) => setSlug(slugify(e.target.value))}
-            className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          Krátky popis
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          Typ odomknutia
-          <select
-            value={unlockType}
-            onChange={(e) =>
-              setUnlockType(e.target.value as (typeof UNLOCK_TYPES)[number])
-            }
-            className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-          >
-            {UNLOCK_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          Predchádzajúca kapitola (podmienka postupu)
-          <select
-            value={requiredChapterId}
-            onChange={(e) => setRequiredChapterId(e.target.value)}
-            className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-          >
-            <option value="">— žiadna (prvá kapitola) —</option>
-            {allChapters
-              .filter((c) => c.id !== id)
-              .map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-          </select>
-        </label>
-
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={isFinal}
-            onChange={(e) => setIsFinal(e.target.checked)}
-          />
-          Finálna kapitola
-        </label>
-
-        {unlockType === 'question' && (
-          <>
-            <label className="flex flex-col gap-1 text-sm">
-              Max. počet pokusov (prázdne = neobmedzené)
-              <input
-                value={maxAttempts}
-                onChange={(e) => setMaxAttempts(e.target.value)}
-                type="number"
-                className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              Správna odpoveď (nová hodnota prepíše starú; viac variantov oddeľ čiarkou)
-              <input
-                value={answer}
-                onChange={(e) => {
-                  setAnswer(e.target.value)
-                  setAnswerSaved(false)
-                }}
-                placeholder="napr. Bratislava, bratislava"
-                className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-              />
-            </label>
-          </>
-        )}
-
-        {unlockType === 'location' && (
-          <div className="flex flex-col gap-2 rounded-xl border border-rose-200 p-3">
-            <div className="flex gap-2">
-              <label className="flex flex-1 flex-col gap-1 text-sm">
-                Latitude
-                <input
-                  value={latitude}
-                  onChange={(e) => setLatitude(e.target.value)}
-                  className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-                />
-              </label>
-              <label className="flex flex-1 flex-col gap-1 text-sm">
-                Longitude
-                <input
-                  value={longitude}
-                  onChange={(e) => setLongitude(e.target.value)}
-                  className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-                />
-              </label>
-            </div>
-            <label className="flex flex-col gap-1 text-sm">
-              Povolený rádius (m)
-              <input
-                value={radius}
-                onChange={(e) => setRadius(e.target.value)}
-                type="number"
-                className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-              />
-            </label>
-            <button
-              onClick={useCurrentLocation}
-              type="button"
-              className="self-start text-sm text-[var(--color-accent)] underline"
-            >
-              Použiť moju aktuálnu polohu
-            </button>
-          </div>
-        )}
-
-        <label className="flex flex-col gap-1 text-sm">
-          Nápoveda
-          <input
-            value={hint}
-            onChange={(e) => setHint(e.target.value)}
-            className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Správa pri úspechu
-          <input
-            value={successMessage}
-            onChange={(e) => setSuccessMessage(e.target.value)}
-            className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Správa pri neúspechu
-          <input
-            value={failureMessage}
-            onChange={(e) => setFailureMessage(e.target.value)}
-            className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-          />
-        </label>
-
-        {error && <p className="text-sm text-rose-600">{error}</p>}
-
-        <button
-          onClick={() => void handleSave()}
-          disabled={saving || !title || !slug}
-          className="self-start rounded-lg bg-[var(--color-accent)] px-4 py-2 font-medium text-white disabled:opacity-60"
-        >
-          {saving ? 'Ukladám…' : isNew ? 'Vytvoriť kapitolu' : 'Uložiť zmeny'}
-          {answerSaved && ' ✓'}
-        </button>
-      </div>
+      {isNew && (
+        <p className="mb-4 text-sm text-[var(--color-muted)]">
+          Najprv kapitolu pomenuj a vytvor — potom do nej pridáš príbehy, fotky a otázky.
+        </p>
+      )}
 
       {!isNew && id && (
         <>
-          {unlockType === 'qr_code' && (
-            <section className="mt-6">
-              <h2 className="mb-2 font-medium">QR kód</h2>
-              <QrTokenEditor chapterId={id} conditionId={null} />
-            </section>
-          )}
-
-          {unlockType === 'combined' && (
-            <section className="mt-6">
-              <h2 className="mb-2 font-medium">Kombinované podmienky</h2>
-              <ConditionsEditor chapterId={id} />
-            </section>
-          )}
-
-          <section className="mt-6">
-            <h2 className="mb-2 font-medium">Hlavný list kapitoly (príbeh, fotky)</h2>
-            <BlockEditor chapterId={id} />
+          <section className="mt-5">
+            <h2 className="mb-1 font-[family-name:var(--font-display)] text-base">
+              Obsah kapitoly
+            </h2>
+            <p className="mb-3 text-sm text-[var(--color-muted)]">
+              Toto si prečíta po otvorení kapitoly, v tomto poradí.
+            </p>
+            <ContentManager chapterId={id} />
           </section>
 
           <section className="mt-8">
-            <h2 className="mb-2 font-medium">Mapa — miesta v tejto kapitole</h2>
+            <h2 className="mb-1 font-[family-name:var(--font-display)] text-base">
+              Mapa — miesta v tejto kapitole
+            </h2>
             <MapPinsEditor chapterId={id} />
           </section>
+
+          <button
+            onClick={() => setSettingsOpen((open) => !open)}
+            aria-expanded={settingsOpen}
+            className="mb-3 mt-8 flex w-full items-center justify-between rounded-xl border border-[var(--paper-border)] px-4 py-3 text-left"
+          >
+            <span className="font-[family-name:var(--font-display)] text-base">
+              Nastavenia kapitoly
+            </span>
+            <span className="text-sm text-[var(--color-muted)]">
+              {settingsOpen ? '▲ skryť' : '▼ názov, odomknutie, správy'}
+            </span>
+          </button>
         </>
+      )}
+
+      {settingsOpen && (
+        <div className="flex flex-col gap-3 rounded-2xl bg-[var(--color-surface)] p-4 shadow-sm">
+          <label className="flex flex-col gap-1 text-sm">
+            Názov
+            <input
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value)
+                if (isNew) setSlug(slugify(e.target.value))
+              }}
+              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm">
+            Slug (URL)
+            <input
+              value={slug}
+              onChange={(e) => setSlug(slugify(e.target.value))}
+              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm">
+            Krátky popis
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm">
+            Typ odomknutia
+            <select
+              value={unlockType}
+              onChange={(e) =>
+                setUnlockType(e.target.value as (typeof UNLOCK_TYPES)[number])
+              }
+              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+            >
+              {UNLOCK_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm">
+            Predchádzajúca kapitola (podmienka postupu)
+            <select
+              value={requiredChapterId}
+              onChange={(e) => setRequiredChapterId(e.target.value)}
+              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+            >
+              <option value="">— žiadna (prvá kapitola) —</option>
+              {allChapters
+                .filter((c) => c.id !== id)
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
+            </select>
+          </label>
+
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={isFinal}
+              onChange={(e) => setIsFinal(e.target.checked)}
+            />
+            Finálna kapitola
+          </label>
+
+          {unlockType === 'question' && (
+            <>
+              <label className="flex flex-col gap-1 text-sm">
+                Max. počet pokusov (prázdne = neobmedzené)
+                <input
+                  value={maxAttempts}
+                  onChange={(e) => setMaxAttempts(e.target.value)}
+                  type="number"
+                  className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                Správna odpoveď (viac variantov oddeľ čiarkou)
+                <input
+                  value={answer}
+                  onChange={(e) => {
+                    setAnswer(e.target.value)
+                    setAnswerSaved(false)
+                  }}
+                  placeholder="napr. Bratislava, bratislava"
+                  className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                />
+              </label>
+            </>
+          )}
+
+          {unlockType === 'location' && (
+            <div className="flex flex-col gap-2 rounded-xl border border-rose-200 p-3">
+              <div className="flex gap-2">
+                <label className="flex flex-1 flex-col gap-1 text-sm">
+                  Latitude
+                  <input
+                    value={latitude}
+                    onChange={(e) => setLatitude(e.target.value)}
+                    className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                  />
+                </label>
+                <label className="flex flex-1 flex-col gap-1 text-sm">
+                  Longitude
+                  <input
+                    value={longitude}
+                    onChange={(e) => setLongitude(e.target.value)}
+                    className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                  />
+                </label>
+              </div>
+              <label className="flex flex-col gap-1 text-sm">
+                Povolený rádius (m)
+                <input
+                  value={radius}
+                  onChange={(e) => setRadius(e.target.value)}
+                  type="number"
+                  className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                />
+              </label>
+              <button
+                onClick={useCurrentLocation}
+                type="button"
+                className="self-start text-sm text-[var(--color-accent)] underline"
+              >
+                Použiť moju aktuálnu polohu
+              </button>
+            </div>
+          )}
+
+          <label className="flex flex-col gap-1 text-sm">
+            Nápoveda
+            <input
+              value={hint}
+              onChange={(e) => setHint(e.target.value)}
+              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            Správa pri úspechu
+            <input
+              value={successMessage}
+              onChange={(e) => setSuccessMessage(e.target.value)}
+              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            Správa pri neúspechu
+            <input
+              value={failureMessage}
+              onChange={(e) => setFailureMessage(e.target.value)}
+              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+            />
+          </label>
+
+          {error && <p className="text-sm text-rose-600">{error}</p>}
+
+          <button
+            onClick={() => void handleSave()}
+            disabled={saving || !title || !slug}
+            className="self-start rounded-lg bg-[var(--color-accent)] px-4 py-2 font-medium text-white disabled:opacity-60"
+          >
+            {saving ? 'Ukladám…' : isNew ? 'Vytvoriť kapitolu' : 'Uložiť zmeny'}
+            {answerSaved && ' ✓'}
+          </button>
+        </div>
+      )}
+
+      {settingsOpen && !isNew && id && unlockType === 'qr_code' && (
+        <section className="mt-6">
+          <h2 className="mb-2 font-medium">QR kód</h2>
+          <QrTokenEditor chapterId={id} conditionId={null} />
+        </section>
+      )}
+
+      {settingsOpen && !isNew && id && unlockType === 'combined' && (
+        <section className="mt-6">
+          <h2 className="mb-2 font-medium">Kombinované podmienky</h2>
+          <ConditionsEditor chapterId={id} />
+        </section>
       )}
     </Layout>
   )

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { findCity, MAP_CITIES } from '../map/cities'
-import { BlockEditor } from './BlockEditor'
+import { ContentManager } from './content/ContentManager'
+import { removeChapterPhotos } from '../../lib/storage'
 import {
   adminCreateMapPin,
   adminDeleteMapPin,
+  adminListBlocks,
   adminListMapPins,
   type MapPinRow,
 } from './api'
@@ -45,7 +47,9 @@ export function MapPinsEditor({ chapterId }: { chapterId: string }) {
     const label = findCity(pin.city_key)?.label ?? pin.city_key
     if (!confirm(`Zmazať miesto ${label} aj s celým jeho obsahom v tejto kapitole?`))
       return
-    await adminDeleteMapPin(pin.id)
+    const blocks = await adminListBlocks(chapterId, pin.id)
+    await adminDeleteMapPin(pin.id) // bloky zmaže ON DELETE CASCADE
+    await removeChapterPhotos(blocks.flatMap((b) => b.storage_path ?? []))
     if (openPinId === pin.id) setOpenPinId(null)
     await reload()
   }
@@ -84,7 +88,7 @@ export function MapPinsEditor({ chapterId }: { chapterId: string }) {
             </div>
             {isOpen && (
               <div className="border-t border-[var(--paper-border)] p-3">
-                <BlockEditor chapterId={chapterId} mapPinId={pin.id} />
+                <ContentManager chapterId={chapterId} mapPinId={pin.id} />
               </div>
             )}
           </div>

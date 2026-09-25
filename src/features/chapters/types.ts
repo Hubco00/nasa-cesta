@@ -27,6 +27,14 @@ export interface QuestionConfig {
   showHintOnWrongAnswer?: boolean
 }
 
+/** chapter_blocks.question_config pre block_type = 'question'. */
+export interface BlockQuestionConfig {
+  type?: 'text' | 'choice'
+  options?: string[]
+  hint?: string
+  successMessage?: string
+}
+
 export interface VerifyAnswerResult {
   correct: boolean
   attemptsExhausted?: boolean

@@ -34,6 +34,7 @@ export type Database = {
     Tables: {
       chapter_answers: {
         Row: {
+          block_id: string | null
           chapter_id: string | null
           condition_id: string | null
           correct_answers: string[]
@@ -42,6 +43,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          block_id?: string | null
           chapter_id?: string | null
           condition_id?: string | null
           correct_answers: string[]
@@ -50,6 +52,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          block_id?: string | null
           chapter_id?: string | null
           condition_id?: string | null
           correct_answers?: string[]
@@ -58,6 +61,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'chapter_answers_block_id_fkey'
+            columns: ['block_id']
+            isOneToOne: true
+            referencedRelation: 'chapter_blocks'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'chapter_answers_chapter_id_fkey'
             columns: ['chapter_id']
@@ -100,6 +110,7 @@ export type Database = {
           map_pin_id: string | null
           order_index: number
           parent_block_id: string | null
+          question_config: Json | null
           storage_path: string | null
           title: string | null
           updated_at: string
@@ -115,6 +126,7 @@ export type Database = {
           map_pin_id?: string | null
           order_index?: number
           parent_block_id?: string | null
+          question_config?: Json | null
           storage_path?: string | null
           title?: string | null
           updated_at?: string
@@ -130,6 +142,7 @@ export type Database = {
           map_pin_id?: string | null
           order_index?: number
           parent_block_id?: string | null
+          question_config?: Json | null
           storage_path?: string | null
           title?: string | null
           updated_at?: string
@@ -347,6 +360,38 @@ export type Database = {
             columns: ['required_chapter_id']
             isOneToOne: false
             referencedRelation: 'chapters_player_view'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      player_block_progress: {
+        Row: {
+          attempt_count: number
+          block_id: string
+          id: string
+          player_id: string
+          solved_at: string | null
+        }
+        Insert: {
+          attempt_count?: number
+          block_id: string
+          id?: string
+          player_id: string
+          solved_at?: string | null
+        }
+        Update: {
+          attempt_count?: number
+          block_id?: string
+          id?: string
+          player_id?: string
+          solved_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'player_block_progress_block_id_fkey'
+            columns: ['block_id']
+            isOneToOne: false
+            referencedRelation: 'chapter_blocks'
             referencedColumns: ['id']
           },
         ]
@@ -744,6 +789,10 @@ export type Database = {
       normalize_answer: { Args: { p_answer: string }; Returns: string }
       verify_answer: {
         Args: { p_answer: string; p_chapter_id: string; p_condition_id: string }
+        Returns: Json
+      }
+      verify_block_answer: {
+        Args: { p_answer: string; p_block_id: string }
         Returns: Json
       }
       verify_location: {

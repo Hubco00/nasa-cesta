@@ -196,3 +196,33 @@ insert into public.chapter_blocks (
   'seed/placeholder.png', 'Ukážková fotografia zo Žiliny',
   'Fotka pripojená k príbehu v Žiline.'
 );
+
+-- Názvy príbehov a ukážková otázka pri meste -------------------------------
+
+update public.chapter_blocks set title = 'Ako to začalo'
+  where id = '00000000-0000-0000-0000-000000000201';
+update public.chapter_blocks set title = 'Prvé kroky'
+  where id = '00000000-0000-0000-0000-000000000211';
+update public.chapter_blocks set title = 'Vlakom do Žiliny'
+  where id = '00000000-0000-0000-0000-000000000212';
+update public.chapter_blocks set title = 'Zo Žiliny do Brna'
+  where id = '00000000-0000-0000-0000-000000000213';
+
+insert into public.chapter_blocks (
+  id, chapter_id, map_pin_id, block_type, order_index, body_markdown, question_config
+) values (
+  '00000000-0000-0000-0000-000000000215',
+  '00000000-0000-0000-0000-000000000101',
+  '00000000-0000-0000-0000-000000000301',
+  'question', 20,
+  'Čo sme si dali ako prvé, keď sme vystúpili?',
+  jsonb_build_object(
+    'type', 'choice',
+    'options', jsonb_build_array('Kávu', 'Zmrzlinu', 'Čaj'),
+    'hint', 'Bolo ráno a obaja sme boli ospalí.',
+    'successMessage', 'Presne tak — a bola hrozná, ale nám to bolo jedno.'
+  )
+);
+
+insert into public.chapter_answers (block_id, correct_answers)
+values ('00000000-0000-0000-0000-000000000215', array['Kávu']);

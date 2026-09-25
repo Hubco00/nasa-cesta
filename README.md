@@ -159,6 +159,22 @@ insertom do `auth.users` — iba cez Supabase Auth:
 - [ ] `npm run build` prechádza bez chýb, `npm run test` a `npm run test:integration` zelené
 - [ ] Preview/produkčná URL appky nie je nikde predčasne zdieľaná
 
+## Ako pridávať obsah (admin)
+
+1. Prihlás sa ako admin → hore v appke choď na `/admin`.
+2. **+ Nová kapitola** → pomenuj ju a vytvor. (Typ odomknutia, predchádzajúcu
+   kapitolu a správy nájdeš neskôr v zbalenej sekcii **Nastavenia kapitoly**.)
+3. V kapitole v sekcii **Obsah kapitoly** pridávaš:
+   - **+ Príbeh** — názov, text príbehu a ľubovoľný počet fotiek s popiskami,
+   - **+ Fotka** — samostatná fotka s popisom,
+   - **+ Otázka** — otázka s voľnou odpoveďou alebo výberom z možností,
+     správna odpoveď, nápoveda po zlej odpovedi a správa po správnej.
+     Každú kartu vieš **Upraviť**, **Zmazať** a šípkami presunúť v poradí.
+4. V sekcii **Mapa — miesta v tejto kapitole** vyber mesto → **+ Pridať miesto**
+   → rozbaľ ho a pridávaj príbehy/fotky/otázky rovnako ako vyššie. Hráčke sa
+   zobrazia po ťuknutí na guličku pri meste na mape kapitoly.
+5. Keď je kapitola hotová, prepni ju na **Publikované**.
+
 ## Štruktúra projektu
 
 ```text

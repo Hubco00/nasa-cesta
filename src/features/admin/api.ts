@@ -96,6 +96,39 @@ export async function adminSetConditionAnswer(
   if (error) throw error
 }
 
+export async function adminGetChapterAnswer(chapterId: string): Promise<string[] | null> {
+  const { data, error } = await supabase
+    .from('chapter_answers')
+    .select('correct_answers')
+    .eq('chapter_id', chapterId)
+    .maybeSingle()
+  if (error) throw error
+  return data?.correct_answers ?? null
+}
+
+export async function adminGetBlockAnswer(blockId: string): Promise<string[] | null> {
+  const { data, error } = await supabase
+    .from('chapter_answers')
+    .select('correct_answers')
+    .eq('block_id', blockId)
+    .maybeSingle()
+  if (error) throw error
+  return data?.correct_answers ?? null
+}
+
+export async function adminSetBlockAnswer(
+  blockId: string,
+  correctAnswers: string[],
+): Promise<void> {
+  const { error } = await supabase
+    .from('chapter_answers')
+    .upsert(
+      { block_id: blockId, correct_answers: correctAnswers },
+      { onConflict: 'block_id' },
+    )
+  if (error) throw error
+}
+
 export async function adminSetQrToken(
   chapterId: string,
   conditionId: string | null,

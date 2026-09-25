@@ -138,6 +138,29 @@ export async function verifyLocation(
   return data as unknown as VerifyLocationResult
 }
 
+/** Otázka v obsahu (nie podmienka odomknutia) — správnosť overí server. */
+export async function verifyBlockAnswer(
+  blockId: string,
+  answer: string,
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc('verify_block_answer', {
+    p_block_id: blockId,
+    p_answer: answer,
+  })
+  if (error) throw error
+  return Boolean((data as { correct?: boolean } | null)?.correct)
+}
+
+export async function fetchBlockSolved(blockId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('player_block_progress')
+    .select('solved_at')
+    .eq('block_id', blockId)
+    .maybeSingle()
+  if (error) throw error
+  return Boolean(data?.solved_at)
+}
+
 export async function completeManualStep(chapterId: string): Promise<void> {
   const { error } = await supabase.rpc('complete_manual_step', {
     p_chapter_id: chapterId,
