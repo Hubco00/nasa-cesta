@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Layout } from '../../components/Layout'
+import { BackLink } from '../../components/NavButtons'
 import { ContentManager } from '../../features/admin/content/ContentManager'
 import { ConditionsEditor } from '../../features/admin/ConditionsEditor'
 import { MapPinsEditor } from '../../features/admin/MapPinsEditor'
@@ -174,10 +175,8 @@ export function ChapterEditorPage() {
 
   return (
     <Layout>
-      <div className="mb-4 flex items-center justify-between">
-        <Link to="/admin" className="text-sm text-[var(--color-accent)] underline">
-          ← Späť na kapitoly
-        </Link>
+      <div className="flex items-start justify-between">
+        <BackLink to="/admin">Admin panel</BackLink>
         {!isNew && chapter && (
           <button
             onClick={() => void togglePublished()}

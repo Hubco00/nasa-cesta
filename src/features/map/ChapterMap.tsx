@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { BackButton, CloseButton } from '../../components/NavButtons'
+import { useOverlay } from '../../hooks/useOverlay'
 import { ChapterBlockRenderer } from '../chapters/ChapterBlockRenderer'
 import { fetchPinBlocks } from '../chapters/api'
 import type { ChapterBlock, MapPin } from '../chapters/types'
@@ -38,15 +41,17 @@ export function ChapterMap({
         )}
       </button>
 
-      {open && (
-        <MapOverlay
-          pins={visiblePins}
-          seen={seen}
-          chapterTitle={chapterTitle}
-          onSeen={(id) => setSeen(markPinSeen(id))}
-          onClose={() => setOpen(false)}
-        />
-      )}
+      {open &&
+        createPortal(
+          <MapOverlay
+            pins={visiblePins}
+            seen={seen}
+            chapterTitle={chapterTitle}
+            onSeen={(id) => setSeen(markPinSeen(id))}
+            onClose={() => setOpen(false)}
+          />,
+          document.body,
+        )}
     </>
   )
 }
@@ -81,18 +86,7 @@ function MapOverlay({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [onClose])
+  useOverlay(onClose)
 
   function openPin(pin: MapPin) {
     setActivePin(pin)
@@ -106,17 +100,15 @@ function MapOverlay({
       aria-modal="true"
       aria-label={`Mapa — ${chapterTitle}`}
     >
-      <header className="flex items-center justify-between border-b border-[var(--paper-border)] px-4 py-3">
-        <div>
-          <p className="font-[family-name:var(--font-display)] text-lg">Mapa</p>
-          <p className="text-sm text-[var(--color-muted)]">{chapterTitle}</p>
+      <header className="flex items-center justify-between gap-2 border-b border-[var(--paper-border)] px-3 py-2">
+        <BackButton onClick={onClose}>Kapitola</BackButton>
+        <div className="min-w-0 text-center">
+          <p className="font-[family-name:var(--font-display)] text-lg leading-tight">
+            Mapa
+          </p>
+          <p className="truncate text-xs text-[var(--color-muted)]">{chapterTitle}</p>
         </div>
-        <button
-          onClick={onClose}
-          className="rounded-lg px-3 py-2 text-sm text-[var(--color-accent)] hover:underline"
-        >
-          Zavrieť ✕
-        </button>
+        <CloseButton onClick={onClose} label="Zavrieť mapu" />
       </header>
 
       <div
@@ -160,15 +152,32 @@ function MapOverlay({
         Ťukni na guličku pri meste.
       </p>
 
-      {activePin && <PinSheet pin={activePin} onClose={() => setActivePin(null)} />}
+      {activePin && (
+        <PinSheet
+          pin={activePin}
+          onClose={() => setActivePin(null)}
+          onCloseAll={onClose}
+        />
+      )}
     </div>
   )
 }
 
-function PinSheet({ pin, onClose }: { pin: MapPin; onClose: () => void }) {
+function PinSheet({
+  pin,
+  onClose,
+  onCloseAll,
+}: {
+  pin: MapPin
+  /** Späť na mapu. */
+  onClose: () => void
+  /** Zavrieť mapu úplne a vrátiť sa do kapitoly. */
+  onCloseAll: () => void
+}) {
   const [blocks, setBlocks] = useState<ChapterBlock[] | null>(null)
   const [failed, setFailed] = useState(false)
   const city = findCity(pin.city_key)
+  useOverlay(onClose)
 
   useEffect(() => {
     let active = true
@@ -193,17 +202,13 @@ function PinSheet({ pin, onClose }: { pin: MapPin; onClose: () => void }) {
         className="animate-sheet-up max-h-[80dvh] overflow-y-auto rounded-t-2xl bg-[var(--color-bg)] px-4 pb-8 pt-4 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-[family-name:var(--font-display)] text-xl">
-            {city?.label}
-          </h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg px-3 py-2 text-sm text-[var(--color-accent)] hover:underline"
-          >
-            Späť na mapu
-          </button>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <BackButton onClick={onClose}>Mapa</BackButton>
+          <CloseButton onClick={onCloseAll} label="Zavrieť mapu" />
         </div>
+        <h2 className="mb-4 font-[family-name:var(--font-display)] text-xl">
+          {city?.label}
+        </h2>
 
         {failed && (
           <p className="text-sm text-rose-600">

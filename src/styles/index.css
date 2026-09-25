@@ -136,9 +136,11 @@ body {
     opacity: 0;
     transform: translateY(6px);
   }
+  /* `none`, nie translateY(0): pri fill-mode `both` by inak ostal transform,
+     ktorý z prvku spraví kontajner pre position: fixed potomkov. */
   100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 

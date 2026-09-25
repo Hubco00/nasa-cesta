@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Layout } from '../../components/Layout'
+import { BackLink } from '../../components/NavButtons'
 import {
   adminGetPlayerProgress,
   adminListChapters,
@@ -73,6 +74,7 @@ export function PlayersPage() {
 
   return (
     <Layout>
+      <BackLink to="/admin">Admin panel</BackLink>
       <h1 className="mb-4 font-[family-name:var(--font-display)] text-xl">Hráčky</h1>
 
       <ul className="mb-6 flex flex-col gap-2">

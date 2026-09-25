@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { PhotoLightbox } from '../../components/PhotoLightbox'
 import { getSignedPhotoUrls } from '../../lib/storage'
 import { renderMarkdownSafe } from '../../lib/security'
 import { BlockQuestion } from '../questions/BlockQuestion'
@@ -72,6 +73,7 @@ function BlockNodeView({
 
 function PhotoBlock({ node }: { node: BlockNode }) {
   const [url, setUrl] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -87,12 +89,19 @@ function PhotoBlock({ node }: { node: BlockNode }) {
   return (
     <figure className="overflow-hidden rounded-2xl bg-[var(--color-surface)] shadow-sm">
       {url ? (
-        <img
-          src={url}
-          alt={node.alt_text ?? ''}
-          className="aspect-[4/3] w-full object-cover"
-          loading="lazy"
-        />
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Zobraziť fotku na celú obrazovku"
+          className="block w-full cursor-zoom-in"
+        >
+          <img
+            src={url}
+            alt={node.alt_text ?? ''}
+            className="aspect-[4/3] w-full object-cover"
+            loading="lazy"
+          />
+        </button>
       ) : (
         <div className="aspect-[4/3] w-full animate-pulse bg-rose-100" />
       )}
@@ -100,6 +109,14 @@ function PhotoBlock({ node }: { node: BlockNode }) {
         <figcaption className="px-4 py-3 text-sm italic text-[var(--color-muted)]">
           {node.caption}
         </figcaption>
+      )}
+      {open && url && (
+        <PhotoLightbox
+          src={url}
+          alt={node.alt_text ?? ''}
+          caption={node.caption}
+          onClose={() => setOpen(false)}
+        />
       )}
     </figure>
   )

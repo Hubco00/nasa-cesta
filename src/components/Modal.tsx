@@ -1,4 +1,7 @@
-import { useEffect, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { useOverlay } from '../hooks/useOverlay'
+import { CloseButton } from './NavButtons'
 
 export function Modal({
   title,
@@ -9,20 +12,9 @@ export function Modal({
   onClose: () => void
   children: ReactNode
 }) {
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [onClose])
+  useOverlay(onClose)
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
       onClick={onClose}
@@ -36,16 +28,11 @@ export function Modal({
       >
         <div className="flex items-center justify-between border-b border-[var(--paper-border)] px-5 py-3">
           <h2 className="font-[family-name:var(--font-display)] text-lg">{title}</h2>
-          <button
-            onClick={onClose}
-            aria-label="Zavrieť"
-            className="rounded-lg px-2 py-1 text-lg text-[var(--color-muted)] hover:text-[var(--color-text)]"
-          >
-            ✕
-          </button>
+          <CloseButton onClick={onClose} />
         </div>
         <div className="overflow-y-auto px-5 py-4">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

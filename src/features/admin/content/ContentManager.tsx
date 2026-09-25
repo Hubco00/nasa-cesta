@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Modal } from '../../../components/Modal'
+import { PhotoLightbox } from '../../../components/PhotoLightbox'
 import { getSignedPhotoUrls, removeChapterPhotos } from '../../../lib/storage'
 import type { BlockQuestionConfig } from '../../chapters/types'
 import {
@@ -202,6 +203,7 @@ function ItemCard({
   const kind = KIND_OF[item.block_type]
   const config = (item.question_config ?? {}) as BlockQuestionConfig
   const thumbs = kind === 'photo' ? [item] : photos
+  const [preview, setPreview] = useState<ChapterBlockRow | null>(null)
 
   return (
     <div className="rounded-xl border border-[var(--paper-border)] bg-[var(--color-surface)] p-3 shadow-sm">
@@ -258,17 +260,33 @@ function ItemCard({
         <div className="mt-2 flex gap-2 overflow-x-auto">
           {thumbs.map((p) =>
             p.storage_path && photoUrls[p.storage_path] ? (
-              <img
+              <button
                 key={p.id}
-                src={photoUrls[p.storage_path]}
-                alt=""
-                className="h-14 w-14 shrink-0 rounded object-cover"
-              />
+                type="button"
+                onClick={() => setPreview(p)}
+                aria-label="Zobraziť fotku"
+                className="shrink-0 cursor-zoom-in"
+              >
+                <img
+                  src={photoUrls[p.storage_path]}
+                  alt=""
+                  className="h-14 w-14 rounded object-cover"
+                />
+              </button>
             ) : (
               <div key={p.id} className="h-14 w-14 shrink-0 rounded bg-black/10" />
             ),
           )}
         </div>
+      )}
+
+      {preview?.storage_path && photoUrls[preview.storage_path] && (
+        <PhotoLightbox
+          src={photoUrls[preview.storage_path]}
+          alt=""
+          caption={preview.caption}
+          onClose={() => setPreview(null)}
+        />
       )}
 
       <div className="mt-3 flex gap-4 border-t border-[var(--paper-border)] pt-2 text-sm">

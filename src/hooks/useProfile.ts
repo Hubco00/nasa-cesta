@@ -16,12 +16,15 @@ interface ProfileState {
   error: string | null
 }
 
+// Profil posledného načítaného používateľa — aby hlavička a admin guard pri
+// každom prechode stránkou neblikali, kým sa rola znova načíta.
+let cachedProfile: Profile | null = null
+
 export function useProfile() {
   const { user } = useAuth()
-  const [state, setState] = useState<ProfileState>({
-    profile: null,
-    loading: true,
-    error: null,
+  const [state, setState] = useState<ProfileState>(() => {
+    const cached = user && cachedProfile?.id === user.id ? cachedProfile : null
+    return { profile: cached, loading: !cached, error: null }
   })
 
   useEffect(() => {
@@ -29,11 +32,13 @@ export function useProfile() {
 
     async function load() {
       if (!user) {
+        cachedProfile = null
         if (active) setState({ profile: null, loading: false, error: null })
         return
       }
 
-      if (active) setState((prev) => ({ ...prev, loading: true, error: null }))
+      const cached = cachedProfile?.id === user.id ? cachedProfile : null
+      if (active) setState({ profile: cached, loading: !cached, error: null })
 
       const { data, error } = await supabase
         .from('profiles')
@@ -46,7 +51,8 @@ export function useProfile() {
         setState({ profile: null, loading: false, error: error.message })
         return
       }
-      setState({ profile: data as Profile, loading: false, error: null })
+      cachedProfile = data as Profile
+      setState({ profile: cachedProfile, loading: false, error: null })
     }
 
     void load()

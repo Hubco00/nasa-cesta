@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Layout } from '../components/Layout'
+import { BackLink } from '../components/NavButtons'
 import { ChapterActionPanel } from '../features/chapters/ChapterActionPanel'
 import { ChapterBlockRenderer } from '../features/chapters/ChapterBlockRenderer'
 import {
@@ -67,9 +68,7 @@ export function ChapterDetailPage() {
       <Layout>
         <div className="flex flex-col items-center gap-3 text-center">
           <p>Táto kapitola zatiaľ nie je dostupná.</p>
-          <Link to="/chapters" className="text-[var(--color-accent)] underline">
-            ← Späť na cestu
-          </Link>
+          <BackLink to="/chapters">Späť na cestu</BackLink>
         </div>
       </Layout>
     )
@@ -80,9 +79,7 @@ export function ChapterDetailPage() {
       <Layout>
         <div className="flex flex-col items-center gap-3 text-center">
           <p className="text-[var(--color-muted)]">Táto kapitola je zatiaľ zamknutá.</p>
-          <Link to="/chapters" className="text-[var(--color-accent)] underline">
-            ← Späť na cestu
-          </Link>
+          <BackLink to="/chapters">Späť na cestu</BackLink>
         </div>
       </Layout>
     )
@@ -96,12 +93,7 @@ export function ChapterDetailPage() {
         }
       >
         <header>
-          <Link
-            to="/chapters"
-            className="mb-2 inline-block text-sm text-[var(--color-accent)] underline-offset-2 hover:underline"
-          >
-            ← Späť na cestu
-          </Link>
+          <BackLink to="/chapters">Späť na cestu</BackLink>
           <h1 className="font-[family-name:var(--font-display)] text-2xl text-[var(--color-text)]">
             {chapter.title}
           </h1>
