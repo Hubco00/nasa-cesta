@@ -66,3 +66,45 @@ body {
 .animate-unlock {
   animation: unlock-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-unlock,
+  .animate-fade-in-up {
+    animation: none;
+  }
+}
+
+.prose-romantic {
+  color: var(--color-text);
+  line-height: 1.7;
+}
+
+.prose-romantic p {
+  margin-bottom: 0.75em;
+}
+
+.prose-romantic blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding-left: 1rem;
+  font-style: italic;
+  color: var(--color-muted);
+}
+
+.prose-romantic strong {
+  color: var(--color-accent);
+}

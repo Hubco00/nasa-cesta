@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from '../types/database'
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -15,9 +16,7 @@ if (!isSupabaseConfigured) {
 
 // V dev/preview režime bez nastavených premenných použijeme neplatný, ale
 // syntakticky validný placeholder, aby createClient nezhodil celú appku.
-// TODO Fáza 2: pridať generický typ `Database` vygenerovaný zo skutočnej schémy
-// (`supabase gen types typescript`), keď budú existovať migrácie.
-export const supabase = createClient(
+export const supabase = createClient<Database>(
   url || 'https://placeholder.supabase.co',
   anonKey || 'placeholder-anon-key',
   {

@@ -1,8 +1,7 @@
-/// <reference types="vitest/config" />
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -41,5 +40,8 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     globals: true,
     css: true,
+    // Integračné testy potrebujú bežiaci lokálny Supabase (`npx supabase
+    // start`) a spúšťajú sa samostatne cez `npm run test:integration`.
+    exclude: [...configDefaults.exclude, 'src/test/integration/**'],
   },
 })
