@@ -258,3 +258,85 @@ body {
     animation: none;
   }
 }
+
+/* Mapa kapitoly — notifikačné guličky na mestách (ChapterMap) */
+.map-badge {
+  background: linear-gradient(135deg, var(--color-gold-400), var(--color-gold-500));
+  box-shadow: 0 2px 6px rgba(74, 26, 36, 0.35);
+}
+
+.map-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+}
+
+.map-bubble__dot {
+  display: block;
+  border-radius: 9999px;
+  border: 2px solid #fff8e6;
+  transition: transform 0.2s ease;
+}
+
+.map-bubble:hover .map-bubble__dot,
+.map-bubble:focus-visible .map-bubble__dot {
+  transform: scale(1.15);
+}
+
+.map-bubble--new .map-bubble__dot {
+  width: 22px;
+  height: 22px;
+  background: radial-gradient(
+    circle at 35% 35%,
+    var(--color-rose-400),
+    var(--color-rose-700)
+  );
+  box-shadow: 0 0 0 0 rgba(195, 154, 74, 0.8);
+  animation: bubble-pulse 1.8s ease-out infinite;
+}
+
+.map-bubble--seen .map-bubble__dot {
+  width: 14px;
+  height: 14px;
+  background: var(--color-gold-500);
+  opacity: 0.85;
+  box-shadow: 0 1px 3px rgba(74, 26, 36, 0.35);
+}
+
+@keyframes bubble-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(195, 154, 74, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(195, 154, 74, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(195, 154, 74, 0);
+  }
+}
+
+@keyframes sheet-up {
+  0% {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-sheet-up {
+  animation: sheet-up 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-bubble--new .map-bubble__dot,
+  .animate-sheet-up {
+    animation: none;
+  }
+}

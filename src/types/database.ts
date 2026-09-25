@@ -97,6 +97,7 @@ export type Database = {
           chapter_id: string
           created_at: string
           id: string
+          map_pin_id: string | null
           order_index: number
           parent_block_id: string | null
           storage_path: string | null
@@ -111,6 +112,7 @@ export type Database = {
           chapter_id: string
           created_at?: string
           id?: string
+          map_pin_id?: string | null
           order_index?: number
           parent_block_id?: string | null
           storage_path?: string | null
@@ -125,6 +127,7 @@ export type Database = {
           chapter_id?: string
           created_at?: string
           id?: string
+          map_pin_id?: string | null
           order_index?: number
           parent_block_id?: string | null
           storage_path?: string | null
@@ -147,10 +150,53 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
+            foreignKeyName: 'chapter_blocks_map_pin_id_fkey'
+            columns: ['map_pin_id']
+            isOneToOne: false
+            referencedRelation: 'chapter_map_pins'
+            referencedColumns: ['id']
+          },
+          {
             foreignKeyName: 'chapter_blocks_parent_block_id_fkey'
             columns: ['parent_block_id']
             isOneToOne: false
             referencedRelation: 'chapter_blocks'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      chapter_map_pins: {
+        Row: {
+          chapter_id: string
+          city_key: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          chapter_id: string
+          city_key: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          chapter_id?: string
+          city_key?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'chapter_map_pins_chapter_id_fkey'
+            columns: ['chapter_id']
+            isOneToOne: false
+            referencedRelation: 'chapters'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'chapter_map_pins_chapter_id_fkey'
+            columns: ['chapter_id']
+            isOneToOne: false
+            referencedRelation: 'chapters_player_view'
             referencedColumns: ['id']
           },
         ]
@@ -494,6 +540,32 @@ export type Database = {
           success_message: string | null
           updated_at: string | null
         }
+        Insert: {
+          allowed_radius_meters?: number | null
+          chapter_id?: string | null
+          condition_type?: string | null
+          created_at?: string | null
+          failure_message?: string | null
+          hint?: string | null
+          id?: string | null
+          question_config?: Json | null
+          step_order?: number | null
+          success_message?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_radius_meters?: number | null
+          chapter_id?: string | null
+          condition_type?: string | null
+          created_at?: string | null
+          failure_message?: string | null
+          hint?: string | null
+          id?: string | null
+          question_config?: Json | null
+          step_order?: number | null
+          success_message?: string | null
+          updated_at?: string | null
+        }
         Relationships: [
           {
             foreignKeyName: 'chapter_unlock_conditions_chapter_id_fkey'
@@ -596,6 +668,10 @@ export type Database = {
       admin_set_qr_token: {
         Args: { p_chapter_id: string; p_condition_id: string; p_token: string }
         Returns: undefined
+      }
+      chapter_is_accessible: {
+        Args: { p_chapter_id: string }
+        Returns: boolean
       }
       chapter_is_published: { Args: { p_chapter_id: string }; Returns: boolean }
       complete_manual_step: { Args: { p_chapter_id: string }; Returns: Json }

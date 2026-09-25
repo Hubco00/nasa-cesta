@@ -164,7 +164,7 @@ function MapNode({ entry, index }: { entry: TimelineEntry; index: number }) {
             <CheckIcon className="h-6 w-6 text-white" />
           ) : (
             <span className="text-[var(--color-rose-900)]">
-              {unlockTypeIcon(entry.unlock_type, 'h-6 w-6')}
+              {unlockTypeIcon(entry.unlock_type ?? '', 'h-6 w-6')}
             </span>
           )}
         </div>
@@ -187,7 +187,7 @@ function MapNode({ entry, index }: { entry: TimelineEntry; index: number }) {
   }
 
   return (
-    <Link to={`/chapters/${entry.slug}`} aria-label={entry.title}>
+    <Link to={`/chapters/${entry.slug}`} aria-label={entry.title ?? undefined}>
       {node}
     </Link>
   )

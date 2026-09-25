@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Layout } from '../../components/Layout'
 import { BlockEditor } from '../../features/admin/BlockEditor'
 import { ConditionsEditor } from '../../features/admin/ConditionsEditor'
+import { MapPinsEditor } from '../../features/admin/MapPinsEditor'
 import { QrTokenEditor } from '../../features/admin/QrTokenEditor'
 import {
   adminCreateChapter,
@@ -383,8 +384,13 @@ export function ChapterEditorPage() {
           )}
 
           <section className="mt-6">
-            <h2 className="mb-2 font-medium">Obsah kapitoly (príbeh, fotky)</h2>
+            <h2 className="mb-2 font-medium">Hlavný list kapitoly (príbeh, fotky)</h2>
             <BlockEditor chapterId={id} />
+          </section>
+
+          <section className="mt-8">
+            <h2 className="mb-2 font-medium">Mapa — miesta v tejto kapitole</h2>
+            <MapPinsEditor chapterId={id} />
           </section>
         </>
       )}

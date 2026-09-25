@@ -18,7 +18,7 @@ pre admina) · marked + DOMPurify (bezpečný Markdown) · PWA (vite-plugin-pwa)
 
 ## Lokálne spustenie
 
-Požiadavky: Node.js 20+ a npm.
+Požiadavky: Node.js 20+ (odporúčané 22 — `nvm use` si verziu načíta z `.nvmrc`) a npm.
 
 ```bash
 npm install
@@ -80,7 +80,7 @@ Užitočné príkazy:
 
 ```bash
 npx supabase stop            # zastaví lokálny stack
-npx supabase db reset        # zahodí lokálnu DB a znova aplikuje migrácie + seed
+npm run db:reset             # zahodí lokálnu DB, aplikuje migrácie + seed a nahrá seed fotku
 npx supabase gen types typescript --local > src/types/database.ts
 ```
 
@@ -274,6 +274,26 @@ supabase/
 - Code-splitting admin rozhrania a QR skenera (`React.lazy` + `Suspense`)
 - README: kompletný návod na Cloudflare Pages deployment + checklist pred
   odovzdaním (pozri sekcie vyššie)
+
+**Hotovo — mapa v kapitole:**
+
+- Pod hlavným listom kapitoly je tlačidlo **Mapa** s počtom nových miest.
+  Otvorí mapu Kráľovstva Slovensko (`public/map/kingdom-of-slovakia.jpg`) s
+  guličkami iba na mestách, ktoré má nastavené _táto_ kapitola; ťuknutie
+  ukáže príbehy/fotky daného mesta pre túto kapitolu. To isté mesto môže mať
+  v každej kapitole iný obsah.
+- Nové (neotvorené) miesto = pulzujúca ružová gulička, otvorené = malá zlatá
+  bodka (pamätá sa iba lokálne v prehliadači).
+- Dáta: `chapter_map_pins` (kapitola + mesto), obsah miesta sú bežné
+  `chapter_blocks` s `map_pin_id` — rovnaký editor, vnáranie aj fotky ako v
+  hlavnom liste.
+- Admin: v editore kapitoly sekcia „Mapa — miesta v tejto kapitole“ → vyber
+  mesto → „+ Pridať miesto“ → pod ním píšeš text/pridávaš fotky. Zoznam
+  kapitol ukazuje počet blokov listu a mestá na mape.
+- Polohy miest na obrázku sú v `src/features/map/cities.ts` (v % šírky/výšky)
+  — ak by si mapu vymenil, stačí upraviť tam.
+- Bezpečnosť: zamknuté kapitoly sa už nevracajú ani cez API (názov, obsah,
+  fotky, miesta) — predtým ich skrývalo iba UI.
 
 **Reálne otestované cez Playwright (headless browser, nie len unit testy)** a
 2 skutočné chyby nájdené a opravené počas tohto testovania:

@@ -149,3 +149,50 @@ insert into public.chapter_blocks (
   'seed/placeholder.png', 'Ukážková fotografia',
   'Táto fotka je pripojená priamo k odseku vyššie — presne takto sa dajú neskôr dopĺňať spomienky.'
 );
+
+-- Ukážkové miesta na mape -------------------------------------------------
+-- Kapitola 1 má Dolný Kubín aj Žilinu; kapitola 2 má tiež Žilinu, ale s iným
+-- obsahom — rovnaké mesto, iný príbeh podľa kapitoly.
+
+insert into public.chapter_map_pins (id, chapter_id, city_key) values
+  ('00000000-0000-0000-0000-000000000301', '00000000-0000-0000-0000-000000000101', 'dolny_kubin'),
+  ('00000000-0000-0000-0000-000000000302', '00000000-0000-0000-0000-000000000101', 'zilina'),
+  ('00000000-0000-0000-0000-000000000303', '00000000-0000-0000-0000-000000000102', 'zilina');
+
+insert into public.chapter_blocks (
+  id, chapter_id, map_pin_id, block_type, order_index, body_markdown
+) values
+  (
+    '00000000-0000-0000-0000-000000000211',
+    '00000000-0000-0000-0000-000000000101',
+    '00000000-0000-0000-0000-000000000301',
+    'text', 10,
+    E'Tu to celé začalo. Sem admin napíše, čo sa stalo v Dolnom Kubíne v rámci prvej kapitoly.'
+  ),
+  (
+    '00000000-0000-0000-0000-000000000212',
+    '00000000-0000-0000-0000-000000000101',
+    '00000000-0000-0000-0000-000000000302',
+    'text', 10,
+    E'Cesta vlakom do Žiliny — obsah Žiliny pre **prvú** kapitolu.'
+  ),
+  (
+    '00000000-0000-0000-0000-000000000213',
+    '00000000-0000-0000-0000-000000000102',
+    '00000000-0000-0000-0000-000000000303',
+    'text', 10,
+    E'Zo Žiliny do Brna — rovnaké mesto, ale obsah pre **druhú** kapitolu.'
+  );
+
+insert into public.chapter_blocks (
+  id, chapter_id, map_pin_id, parent_block_id, block_type, order_index,
+  storage_path, alt_text, caption
+) values (
+  '00000000-0000-0000-0000-000000000214',
+  '00000000-0000-0000-0000-000000000101',
+  '00000000-0000-0000-0000-000000000302',
+  '00000000-0000-0000-0000-000000000212',
+  'photo', 10,
+  'seed/placeholder.png', 'Ukážková fotografia zo Žiliny',
+  'Fotka pripojená k príbehu v Žiline.'
+);

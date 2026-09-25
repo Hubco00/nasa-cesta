@@ -6,9 +6,11 @@ import { ChapterBlockRenderer } from '../features/chapters/ChapterBlockRenderer'
 import {
   fetchChapterBlocks,
   fetchChapterBySlug,
+  fetchChapterMapPins,
   fetchProgressStatus,
 } from '../features/chapters/api'
-import type { ChapterBlock, ChapterDetail } from '../features/chapters/types'
+import type { ChapterBlock, ChapterDetail, MapPin } from '../features/chapters/types'
+import { ChapterMap } from '../features/map/ChapterMap'
 
 export function ChapterDetailPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -16,6 +18,7 @@ export function ChapterDetailPage() {
 
   const [chapter, setChapter] = useState<ChapterDetail | null>(null)
   const [blocks, setBlocks] = useState<ChapterBlock[]>([])
+  const [pins, setPins] = useState<MapPin[]>([])
   const [status, setStatus] = useState<string>('locked')
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -32,13 +35,15 @@ export function ChapterDetailPage() {
         setLoading(false)
         return
       }
-      const [blockRows, progressStatus] = await Promise.all([
+      const [blockRows, pinRows, progressStatus] = await Promise.all([
         fetchChapterBlocks(found.id!),
+        fetchChapterMapPins(found.id!),
         fetchProgressStatus(found.id!),
       ])
       if (!active) return
       setChapter(found)
       setBlocks(blockRows)
+      setPins(pinRows)
       setStatus(progressStatus)
       setLoading(false)
     }
@@ -61,9 +66,9 @@ export function ChapterDetailPage() {
     return (
       <Layout>
         <div className="flex flex-col items-center gap-3 text-center">
-          <p>Kapitola nebola nájdená.</p>
+          <p>Táto kapitola zatiaľ nie je dostupná.</p>
           <Link to="/chapters" className="text-[var(--color-accent)] underline">
-            ← Späť na mapu
+            ← Späť na cestu
           </Link>
         </div>
       </Layout>
@@ -76,7 +81,7 @@ export function ChapterDetailPage() {
         <div className="flex flex-col items-center gap-3 text-center">
           <p className="text-[var(--color-muted)]">Táto kapitola je zatiaľ zamknutá.</p>
           <Link to="/chapters" className="text-[var(--color-accent)] underline">
-            ← Späť na mapu
+            ← Späť na cestu
           </Link>
         </div>
       </Layout>
@@ -95,7 +100,7 @@ export function ChapterDetailPage() {
             to="/chapters"
             className="mb-2 inline-block text-sm text-[var(--color-accent)] underline-offset-2 hover:underline"
           >
-            ← Späť na mapu
+            ← Späť na cestu
           </Link>
           <h1 className="font-[family-name:var(--font-display)] text-2xl text-[var(--color-text)]">
             {chapter.title}
@@ -108,6 +113,8 @@ export function ChapterDetailPage() {
         </header>
 
         <ChapterBlockRenderer blocks={blocks} />
+
+        <ChapterMap pins={pins} chapterTitle={chapter.title ?? ''} />
 
         {status === 'completed' ? (
           <p className="rounded-2xl bg-[var(--color-surface)] p-5 text-sm text-[var(--color-muted)] shadow-sm">

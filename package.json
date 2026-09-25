@@ -13,7 +13,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "db:reset": "supabase db reset && sh supabase/seed-storage.sh"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

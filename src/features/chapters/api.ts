@@ -2,6 +2,7 @@ import { supabase } from '../../lib/supabase'
 import type {
   ChapterBlock,
   ChapterDetail,
+  MapPin,
   TimelineEntry,
   UnlockCondition,
   VerifyAnswerResult,
@@ -33,11 +34,32 @@ export async function fetchProgressStatus(chapterId: string): Promise<string> {
   return data ?? 'locked'
 }
 
+/** Hlavný list kapitoly — bloky, ktoré nepatria žiadnemu miestu na mape. */
 export async function fetchChapterBlocks(chapterId: string): Promise<ChapterBlock[]> {
   const { data, error } = await supabase
     .from('chapter_blocks')
     .select('*')
     .eq('chapter_id', chapterId)
+    .is('map_pin_id', null)
+    .order('order_index', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function fetchChapterMapPins(chapterId: string): Promise<MapPin[]> {
+  const { data, error } = await supabase
+    .from('chapter_map_pins')
+    .select('*')
+    .eq('chapter_id', chapterId)
+  if (error) throw error
+  return data ?? []
+}
+
+export async function fetchPinBlocks(pinId: string): Promise<ChapterBlock[]> {
+  const { data, error } = await supabase
+    .from('chapter_blocks')
+    .select('*')
+    .eq('map_pin_id', pinId)
     .order('order_index', { ascending: true })
   if (error) throw error
   return data ?? []

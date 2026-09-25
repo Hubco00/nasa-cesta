@@ -10,6 +10,7 @@ export type UnlockConditionRow =
   Database['public']['Tables']['chapter_unlock_conditions']['Row']
 export type UnlockConditionInsert =
   Database['public']['Tables']['chapter_unlock_conditions']['Insert']
+export type MapPinRow = Database['public']['Tables']['chapter_map_pins']['Row']
 export type ProfileRow = Database['public']['Tables']['profiles']['Row']
 export type PlayerProgressRow = Database['public']['Tables']['player_progress']['Row']
 
@@ -110,14 +111,73 @@ export async function adminSetQrToken(
 
 // --- Bloky obsahu -------------------------------------------------------
 
-export async function adminListBlocks(chapterId: string): Promise<ChapterBlockRow[]> {
-  const { data, error } = await supabase
-    .from('chapter_blocks')
-    .select('*')
-    .eq('chapter_id', chapterId)
-    .order('order_index')
+/**
+ * Bloky jedného "priestoru" kapitoly: bez `mapPinId` hlavný list kapitoly,
+ * s `mapPinId` obsah konkrétneho miesta na mape.
+ */
+export async function adminListBlocks(
+  chapterId: string,
+  mapPinId: string | null = null,
+): Promise<ChapterBlockRow[]> {
+  let query = supabase.from('chapter_blocks').select('*').eq('chapter_id', chapterId)
+  query = mapPinId ? query.eq('map_pin_id', mapPinId) : query.is('map_pin_id', null)
+  const { data, error } = await query.order('order_index')
   if (error) throw error
   return data ?? []
+}
+
+// --- Miesta na mape -------------------------------------------------------
+
+export async function adminListMapPins(chapterId: string): Promise<MapPinRow[]> {
+  const { data, error } = await supabase
+    .from('chapter_map_pins')
+    .select('*')
+    .eq('chapter_id', chapterId)
+    .order('created_at')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function adminCreateMapPin(
+  chapterId: string,
+  cityKey: string,
+): Promise<MapPinRow> {
+  const { data, error } = await supabase
+    .from('chapter_map_pins')
+    .insert({ chapter_id: chapterId, city_key: cityKey })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+/** Zmaže miesto aj všetky jeho bloky (ON DELETE CASCADE). */
+export async function adminDeleteMapPin(id: string): Promise<void> {
+  const { error } = await supabase.from('chapter_map_pins').delete().eq('id', id)
+  if (error) throw error
+}
+
+export interface ChapterContentSummary {
+  storyBlocks: number
+  pinCities: string[]
+}
+
+/** Prehľad obsahu všetkých kapitol pre zoznam v admine (2 dotazy spolu). */
+export async function adminContentSummary(): Promise<
+  Record<string, ChapterContentSummary>
+> {
+  const [blocks, pins] = await Promise.all([
+    supabase.from('chapter_blocks').select('chapter_id, map_pin_id'),
+    supabase.from('chapter_map_pins').select('chapter_id, city_key'),
+  ])
+  if (blocks.error) throw blocks.error
+  if (pins.error) throw pins.error
+
+  const summary: Record<string, ChapterContentSummary> = {}
+  const entry = (id: string) => (summary[id] ??= { storyBlocks: 0, pinCities: [] })
+  for (const b of blocks.data ?? []) if (!b.map_pin_id) entry(b.chapter_id).storyBlocks++
+  for (const p of pins.data ?? []) entry(p.chapter_id).pinCities.push(p.city_key)
+  return summary
 }
 
 export async function adminCreateBlock(

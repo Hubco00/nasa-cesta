@@ -83,6 +83,32 @@ describe.skipIf(!isLocalSupabaseUp)(
       expect(second?.status).toBe('locked')
     })
 
+    it('zamknutá kapitola: API neprezradí názov, obsah ani miesta na mape', async () => {
+      const { data: timeline } = await player.rpc('get_my_timeline')
+      const locked = timeline?.find((row) => row.chapter_id === CHAPTER_QUESTION)
+      expect(locked?.status).toBe('locked')
+      expect(locked?.title).toBeNull()
+      expect(locked?.slug).toBeNull()
+
+      const { data: view } = await player
+        .from('chapters_player_view')
+        .select('id')
+        .eq('id', CHAPTER_QUESTION)
+      expect(view).toEqual([])
+
+      const { data: blocks } = await player
+        .from('chapter_blocks')
+        .select('id')
+        .eq('chapter_id', CHAPTER_QUESTION)
+      expect(blocks).toEqual([])
+
+      const { data: pins } = await player
+        .from('chapter_map_pins')
+        .select('id')
+        .eq('chapter_id', CHAPTER_QUESTION)
+      expect(pins).toEqual([])
+    })
+
     it('nepublikovaná kapitola sa hráčke nezobrazí', async () => {
       const draftId = crypto.randomUUID()
       const { error: insertError } = await admin.from('chapters').insert({
@@ -256,6 +282,47 @@ describe.skipIf(!isLocalSupabaseUp)(
       expect(error).toBeNull()
       expect(blocks?.length).toBeGreaterThan(0)
       expect(blocks?.some((b) => b.block_type === 'photo' && b.storage_path)).toBe(true)
+    })
+    it('miesta na mape: rovnaké mesto má v každej kapitole vlastný obsah', async () => {
+      // Po predchádzajúcich testoch sú kapitoly 1 aj 2 splnené, teda prístupné.
+      const { data: introPins } = await player
+        .from('chapter_map_pins')
+        .select('id, city_key')
+        .eq('chapter_id', CHAPTER_INTRO)
+      expect(introPins?.map((p) => p.city_key).sort()).toEqual(['dolny_kubin', 'zilina'])
+
+      const { data: questionPins } = await player
+        .from('chapter_map_pins')
+        .select('id, city_key')
+        .eq('chapter_id', CHAPTER_QUESTION)
+      expect(questionPins?.map((p) => p.city_key)).toEqual(['zilina'])
+
+      const introZilina = introPins!.find((p) => p.city_key === 'zilina')!
+      const questionZilina = questionPins![0]
+      const [a, b] = await Promise.all([
+        player
+          .from('chapter_blocks')
+          .select('body_markdown')
+          .eq('map_pin_id', introZilina.id),
+        player
+          .from('chapter_blocks')
+          .select('body_markdown')
+          .eq('map_pin_id', questionZilina.id),
+      ])
+      const textA = a.data?.map((r) => r.body_markdown).join(' ')
+      const textB = b.data?.map((r) => r.body_markdown).join(' ')
+      expect(textA).toContain('prvú')
+      expect(textB).toContain('druhú')
+
+      const { data: mainStory } = await player
+        .from('chapter_blocks')
+        .select('id')
+        .eq('chapter_id', CHAPTER_INTRO)
+        .is('map_pin_id', null)
+      expect(mainStory?.map((r) => r.id).sort()).toEqual([
+        '00000000-0000-0000-0000-000000000201',
+        '00000000-0000-0000-0000-000000000202',
+      ])
     })
   },
 )

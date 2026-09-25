@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import {
+  adminContentSummary,
   adminListChapters,
   adminSwapChapterOrder,
   adminUpdateChapter,
 } from '../features/admin/api'
-import type { ChapterRow } from '../features/admin/api'
+import type { ChapterContentSummary, ChapterRow } from '../features/admin/api'
+import { findCity } from '../features/map/cities'
 
 const UNLOCK_LABEL: Record<string, string> = {
   manual: 'manuál',
@@ -19,10 +21,16 @@ const UNLOCK_LABEL: Record<string, string> = {
 
 export function AdminPage() {
   const [chapters, setChapters] = useState<ChapterRow[]>([])
+  const [summary, setSummary] = useState<Record<string, ChapterContentSummary>>({})
   const [loading, setLoading] = useState(true)
 
   async function reload() {
-    setChapters(await adminListChapters())
+    const [rows, content] = await Promise.all([
+      adminListChapters(),
+      adminContentSummary(),
+    ])
+    setChapters(rows)
+    setSummary(content)
     setLoading(false)
   }
 
@@ -79,7 +87,17 @@ export function AdminPage() {
               <span className="text-xs text-[var(--color-muted)]">
                 {UNLOCK_LABEL[chapter.unlock_type] ?? chapter.unlock_type}
                 {chapter.is_final ? ' · finálna' : ''}
+                {' · '}
+                {summary[chapter.id]?.storyBlocks ?? 0} blokov v liste
               </span>
+              {(summary[chapter.id]?.pinCities.length ?? 0) > 0 && (
+                <span className="text-xs text-[var(--color-muted)]">
+                  mapa:{' '}
+                  {summary[chapter.id].pinCities
+                    .map((key) => findCity(key)?.label ?? key)
+                    .join(', ')}
+                </span>
+              )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <button

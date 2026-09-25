@@ -27,7 +27,14 @@ function buildTree(blocks: ChapterBlockRow[]): TreeNode[] {
   return roots
 }
 
-export function BlockEditor({ chapterId }: { chapterId: string }) {
+export function BlockEditor({
+  chapterId,
+  mapPinId = null,
+}: {
+  chapterId: string
+  /** Ak je nastavené, editor spravuje obsah tohto miesta na mape, nie hlavný list. */
+  mapPinId?: string | null
+}) {
   const [blocks, setBlocks] = useState<ChapterBlockRow[]>([])
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({})
   const [newText, setNewText] = useState('')
@@ -36,7 +43,7 @@ export function BlockEditor({ chapterId }: { chapterId: string }) {
   const [caption, setCaption] = useState('')
 
   async function reload() {
-    const rows = await adminListBlocks(chapterId)
+    const rows = await adminListBlocks(chapterId, mapPinId)
     setBlocks(rows)
     const paths = rows.filter((r) => r.storage_path).map((r) => r.storage_path!)
     setPhotoUrls(await getSignedPhotoUrls(paths))
@@ -47,7 +54,7 @@ export function BlockEditor({ chapterId }: { chapterId: string }) {
       await reload()
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reload zámerne nie je v deps, inak by re-render vytváral novú referenciu a spôsobil nekonečnú slučku
-  }, [chapterId])
+  }, [chapterId, mapPinId])
 
   async function addTextBlock() {
     if (!newText.trim()) return
@@ -56,6 +63,7 @@ export function BlockEditor({ chapterId }: { chapterId: string }) {
     ).length
     await adminCreateBlock({
       chapter_id: chapterId,
+      map_pin_id: mapPinId,
       parent_block_id: newParent || null,
       block_type: 'text',
       order_index: (siblingCount + 1) * 10,
@@ -76,6 +84,7 @@ export function BlockEditor({ chapterId }: { chapterId: string }) {
       ).length
       await adminCreateBlock({
         chapter_id: chapterId,
+        map_pin_id: mapPinId,
         parent_block_id: newParent || null,
         block_type: 'photo',
         order_index: (siblingCount + 1) * 10,
