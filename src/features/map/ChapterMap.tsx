@@ -199,29 +199,32 @@ function PinSheet({
       onClick={onClose}
     >
       <div
-        className="animate-sheet-up max-h-[80dvh] overflow-y-auto rounded-t-2xl bg-[var(--color-bg)] px-4 pb-8 pt-4 shadow-2xl"
+        className="animate-sheet-up flex max-h-[85dvh] flex-col overflow-hidden rounded-t-2xl bg-[var(--color-bg)] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-2 flex items-center justify-between gap-2">
+        {/* Hlavička mimo scrollovanej časti — ← Mapa a ✕ sú vidno stále. */}
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--paper-border)] px-3 py-2">
           <BackButton onClick={onClose}>Mapa</BackButton>
+          <h2 className="min-w-0 truncate font-[family-name:var(--font-display)] text-lg">
+            {city?.label}
+          </h2>
           <CloseButton onClick={onCloseAll} label="Zavrieť mapu" />
         </div>
-        <h2 className="mb-4 font-[family-name:var(--font-display)] text-xl">
-          {city?.label}
-        </h2>
 
-        {failed && (
-          <p className="text-sm text-rose-600">
-            Obsah sa nepodarilo načítať. Skontroluj pripojenie a skús to znova.
-          </p>
-        )}
-        {!failed && blocks === null && (
-          <p className="text-sm text-[var(--color-muted)]">Načítavam…</p>
-        )}
-        {blocks && blocks.length === 0 && (
-          <p className="text-sm text-[var(--color-muted)]">Tu zatiaľ nič nie je.</p>
-        )}
-        {blocks && blocks.length > 0 && <ChapterBlockRenderer blocks={blocks} />}
+        <div className="overflow-y-auto px-4 pb-8 pt-4">
+          {failed && (
+            <p className="text-sm text-rose-600">
+              Obsah sa nepodarilo načítať. Skontroluj pripojenie a skús to znova.
+            </p>
+          )}
+          {!failed && blocks === null && (
+            <p className="text-sm text-[var(--color-muted)]">Načítavam…</p>
+          )}
+          {blocks && blocks.length === 0 && (
+            <p className="text-sm text-[var(--color-muted)]">Tu zatiaľ nič nie je.</p>
+          )}
+          {blocks && blocks.length > 0 && <ChapterBlockRenderer blocks={blocks} />}
+        </div>
       </div>
     </div>
   )

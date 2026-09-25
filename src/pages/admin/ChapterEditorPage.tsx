@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Layout } from '../../components/Layout'
-import { BackLink } from '../../components/NavButtons'
 import { ContentManager } from '../../features/admin/content/ContentManager'
 import { ConditionsEditor } from '../../features/admin/ConditionsEditor'
 import { MapPinsEditor } from '../../features/admin/MapPinsEditor'
@@ -165,32 +164,31 @@ export function ChapterEditorPage() {
     })
   }
 
+  const back = { to: '/admin', label: 'Admin panel' }
+
   if (loading) {
     return (
-      <Layout>
+      <Layout back={back}>
         <p className="text-sm text-[var(--color-muted)]">Načítavam…</p>
       </Layout>
     )
   }
 
-  return (
-    <Layout>
-      <div className="flex items-start justify-between">
-        <BackLink to="/admin">Admin panel</BackLink>
-        {!isNew && chapter && (
-          <button
-            onClick={() => void togglePublished()}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-              chapter.is_published
-                ? 'bg-emerald-100 text-emerald-800'
-                : 'bg-rose-100 text-rose-800'
-            }`}
-          >
-            {chapter.is_published ? 'Publikované' : 'Skryté'}
-          </button>
-        )}
-      </div>
+  const publishToggle = !isNew && chapter && (
+    <button
+      onClick={() => void togglePublished()}
+      className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+        chapter.is_published
+          ? 'bg-emerald-100 text-emerald-800'
+          : 'bg-rose-100 text-rose-800'
+      }`}
+    >
+      {chapter.is_published ? 'Publikované' : 'Skryté'}
+    </button>
+  )
 
+  return (
+    <Layout back={back} actions={publishToggle}>
       <h1 className="mb-1 font-[family-name:var(--font-display)] text-xl">
         {isNew ? 'Nová kapitola' : chapter?.title}
       </h1>

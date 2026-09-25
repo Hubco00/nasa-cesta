@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Layout } from '../components/Layout'
-import { BackLink } from '../components/NavButtons'
 import { ChapterActionPanel } from '../features/chapters/ChapterActionPanel'
 import { ChapterBlockRenderer } from '../features/chapters/ChapterBlockRenderer'
 import {
@@ -57,7 +56,7 @@ export function ChapterDetailPage() {
 
   if (loading) {
     return (
-      <Layout>
+      <Layout back={{ to: '/chapters', label: 'Späť na cestu' }}>
         <p className="text-sm text-[var(--color-muted)]">Načítavam kapitolu…</p>
       </Layout>
     )
@@ -65,10 +64,9 @@ export function ChapterDetailPage() {
 
   if (notFound || !chapter) {
     return (
-      <Layout>
+      <Layout back={{ to: '/chapters', label: 'Späť na cestu' }}>
         <div className="flex flex-col items-center gap-3 text-center">
           <p>Táto kapitola zatiaľ nie je dostupná.</p>
-          <BackLink to="/chapters">Späť na cestu</BackLink>
         </div>
       </Layout>
     )
@@ -76,24 +74,22 @@ export function ChapterDetailPage() {
 
   if (status === 'locked') {
     return (
-      <Layout>
+      <Layout back={{ to: '/chapters', label: 'Späť na cestu' }}>
         <div className="flex flex-col items-center gap-3 text-center">
           <p className="text-[var(--color-muted)]">Táto kapitola je zatiaľ zamknutá.</p>
-          <BackLink to="/chapters">Späť na cestu</BackLink>
         </div>
       </Layout>
     )
   }
 
   return (
-    <Layout>
+    <Layout back={{ to: '/chapters', label: 'Späť na cestu' }}>
       <div
         className={
           chapter.is_final ? 'flex flex-col gap-6 text-center' : 'flex flex-col gap-6'
         }
       >
         <header>
-          <BackLink to="/chapters">Späť na cestu</BackLink>
           <h1 className="font-[family-name:var(--font-display)] text-2xl text-[var(--color-text)]">
             {chapter.title}
           </h1>

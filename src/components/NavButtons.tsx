@@ -5,7 +5,7 @@ export function BackLink({ to, children }: { to: string; children: string }) {
   return (
     <Link
       to={to}
-      className="mb-3 inline-flex items-center gap-1 rounded-lg py-1 pr-2 text-sm font-medium text-[var(--color-accent)] hover:underline"
+      className="inline-flex items-center gap-1 rounded-lg py-1 pr-2 text-sm font-medium text-[var(--color-accent)] hover:underline"
     >
       <span aria-hidden="true">←</span> {children}
     </Link>

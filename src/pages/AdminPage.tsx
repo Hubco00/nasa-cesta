@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Layout } from '../components/Layout'
-import { BackLink } from '../components/NavButtons'
 import {
   adminContentSummary,
   adminListChapters,
@@ -54,8 +53,7 @@ export function AdminPage() {
   }
 
   return (
-    <Layout>
-      <BackLink to="/chapters">Naša cesta</BackLink>
+    <Layout back={{ to: '/chapters', label: 'Naša cesta' }}>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="font-[family-name:var(--font-display)] text-xl">Kapitoly</h1>
         <div className="flex gap-3 text-sm">
