@@ -71,13 +71,14 @@ export function ContentManager({
 
   async function remove(item: ChapterBlockRow) {
     const kind = KIND_OF[item.block_type]
-    const photos = childrenOf(item.id).filter((c) => c.block_type === 'photo')
-    const extra = photos.length > 0 ? ` aj s ${photos.length} fotkami` : ''
+    // Fotky príbehu aj fotky-odmeny v listoch po odpovedi na otázku.
+    const withPhoto = childrenOf(item.id).filter((c) => c.storage_path)
+    const extra = withPhoto.length > 0 ? ` aj s ${withPhoto.length} fotkami` : ''
     if (
       !confirm(`Zmazať — ${KIND_LABEL[kind].toLowerCase()}${extra}? Nedá sa to vrátiť.`)
     )
       return
-    const paths = [item, ...photos].flatMap((b) => b.storage_path ?? [])
+    const paths = [item, ...withPhoto].flatMap((b) => b.storage_path ?? [])
     await adminDeleteBlock(item.id) // deti zmaže ON DELETE CASCADE
     await removeChapterPhotos(paths)
     await reload()
@@ -110,6 +111,7 @@ export function ContentManager({
           key={item.id}
           item={item}
           photos={childrenOf(item.id).filter((c) => c.block_type === 'photo')}
+          outcomes={childrenOf(item.id).filter((c) => c.reveal_on)}
           photoUrls={photoUrls}
           isFirst={index === 0}
           isLast={index === items.length - 1}
@@ -170,6 +172,10 @@ export function ContentManager({
               chapterId={chapterId}
               mapPinId={mapPinId}
               question={form.block}
+              outcomes={
+                form.block ? childrenOf(form.block.id).filter((c) => c.reveal_on) : []
+              }
+              photoUrls={photoUrls}
               nextOrderIndex={nextOrderIndex}
               onSaved={closeAndReload}
               onCancel={() => setForm(null)}
@@ -184,6 +190,7 @@ export function ContentManager({
 function ItemCard({
   item,
   photos,
+  outcomes,
   photoUrls,
   isFirst,
   isLast,
@@ -193,6 +200,7 @@ function ItemCard({
 }: {
   item: ChapterBlockRow
   photos: ChapterBlockRow[]
+  outcomes: ChapterBlockRow[]
   photoUrls: Record<string, string>
   isFirst: boolean
   isLast: boolean
@@ -202,7 +210,14 @@ function ItemCard({
 }) {
   const kind = KIND_OF[item.block_type]
   const config = (item.question_config ?? {}) as BlockQuestionConfig
-  const thumbs = kind === 'photo' ? [item] : photos
+  const thumbs =
+    kind === 'photo'
+      ? [item]
+      : kind === 'question'
+        ? outcomes.filter((o) => o.storage_path)
+        : photos
+  const outcomeFor = (result: 'correct' | 'wrong') =>
+    outcomes.find((o) => o.reveal_on === result)
   const [preview, setPreview] = useState<ChapterBlockRow | null>(null)
 
   return (
@@ -233,6 +248,26 @@ function ItemCard({
                   ? `Možnosti: ${(config.options ?? []).join(' · ')}`
                   : 'Napíše odpoveď'}
               </p>
+              {(['correct', 'wrong'] as const).map((result) => {
+                const letter = outcomeFor(result)
+                return (
+                  <p
+                    key={result}
+                    className="line-clamp-1 text-sm text-[var(--color-muted)]"
+                  >
+                    <span className="font-medium text-[var(--color-text)]">
+                      {result === 'correct' ? 'Po správnej: ' : 'Po nesprávnej: '}
+                    </span>
+                    {letter
+                      ? letter.body_markdown?.trim() ||
+                        (letter.storage_path ? '(iba fotka)' : '')
+                      : '—'}
+                    {letter?.storage_path && letter.body_markdown?.trim()
+                      ? ' + fotka'
+                      : ''}
+                  </p>
+                )
+              })}
             </>
           )}
         </div>

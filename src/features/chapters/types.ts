@@ -32,7 +32,6 @@ export interface BlockQuestionConfig {
   type?: 'text' | 'choice'
   options?: string[]
   hint?: string
-  successMessage?: string
 }
 
 export interface VerifyAnswerResult {

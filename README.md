@@ -168,7 +168,9 @@ insertom do `auth.users` — iba cez Supabase Auth:
    - **+ Príbeh** — názov, text príbehu a ľubovoľný počet fotiek s popiskami,
    - **+ Fotka** — samostatná fotka s popisom,
    - **+ Otázka** — otázka s voľnou odpoveďou alebo výberom z možností,
-     správna odpoveď, nápoveda po zlej odpovedi a správa po správnej.
+     správna odpoveď, nápoveda, a **list po správnej** aj **po nesprávnej**
+     odpovedi — každý s voliteľnou fotkou ako odmenou. Listy a fotky sa
+     hráčke vydajú až po odpovedi (server), takže vopred neprezradia odpoveď.
      Každú kartu vieš **Upraviť**, **Zmazať** a šípkami presunúť v poradí.
 4. V sekcii **Mapa — miesta v tejto kapitole** vyber mesto → **+ Pridať miesto**
    → rozbaľ ho a pridávaj príbehy/fotky/otázky rovnako ako vyššie. Hráčke sa

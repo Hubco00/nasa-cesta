@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
-import { PhotoLightbox } from '../../components/PhotoLightbox'
-import { getSignedPhotoUrls } from '../../lib/storage'
+import { useMemo } from 'react'
 import { renderMarkdownSafe } from '../../lib/security'
 import { BlockQuestion } from '../questions/BlockQuestion'
+import { PhotoFigure } from './PhotoFigure'
 import type { ChapterBlock } from './types'
 
 interface BlockNode extends ChapterBlock {
@@ -56,11 +55,18 @@ function BlockNodeView({
         </div>
       )}
 
-      {node.block_type === 'photo' && <PhotoBlock node={node} />}
+      {node.block_type === 'photo' && node.storage_path && (
+        <PhotoFigure
+          storagePath={node.storage_path}
+          alt={node.alt_text}
+          caption={node.caption}
+        />
+      )}
 
       {node.block_type === 'question' && <BlockQuestion block={node} />}
 
-      {node.children.length > 0 && (
+      {/* Deti otázky sú listy po odpovedi — tie zobrazuje BlockQuestion sama. */}
+      {node.block_type !== 'question' && node.children.length > 0 && (
         <div className="mt-3 flex flex-col gap-3 border-l-2 border-rose-200/50 pl-3">
           {node.children.map((child, i) => (
             <BlockNodeView key={child.id} node={child} depth={depth + 1} index={i} />
@@ -68,57 +74,6 @@ function BlockNodeView({
         </div>
       )}
     </div>
-  )
-}
-
-function PhotoBlock({ node }: { node: BlockNode }) {
-  const [url, setUrl] = useState<string | null>(null)
-  const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    let active = true
-    if (!node.storage_path) return
-    getSignedPhotoUrls([node.storage_path]).then((urls) => {
-      if (active) setUrl(urls[node.storage_path!] ?? null)
-    })
-    return () => {
-      active = false
-    }
-  }, [node.storage_path])
-
-  return (
-    <figure className="overflow-hidden rounded-2xl bg-[var(--color-surface)] shadow-sm">
-      {url ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label="Zobraziť fotku na celú obrazovku"
-          className="block w-full cursor-zoom-in"
-        >
-          <img
-            src={url}
-            alt={node.alt_text ?? ''}
-            className="aspect-[4/3] w-full object-cover"
-            loading="lazy"
-          />
-        </button>
-      ) : (
-        <div className="aspect-[4/3] w-full animate-pulse bg-rose-100" />
-      )}
-      {node.caption && (
-        <figcaption className="px-4 py-3 text-sm italic text-[var(--color-muted)]">
-          {node.caption}
-        </figcaption>
-      )}
-      {open && url && (
-        <PhotoLightbox
-          src={url}
-          alt={node.alt_text ?? ''}
-          caption={node.caption}
-          onClose={() => setOpen(false)}
-        />
-      )}
-    </figure>
   )
 }
 

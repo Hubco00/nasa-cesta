@@ -111,6 +111,7 @@ export type Database = {
           order_index: number
           parent_block_id: string | null
           question_config: Json | null
+          reveal_on: string | null
           storage_path: string | null
           title: string | null
           updated_at: string
@@ -127,6 +128,7 @@ export type Database = {
           order_index?: number
           parent_block_id?: string | null
           question_config?: Json | null
+          reveal_on?: string | null
           storage_path?: string | null
           title?: string | null
           updated_at?: string
@@ -143,6 +145,7 @@ export type Database = {
           order_index?: number
           parent_block_id?: string | null
           question_config?: Json | null
+          reveal_on?: string | null
           storage_path?: string | null
           title?: string | null
           updated_at?: string
@@ -369,6 +372,7 @@ export type Database = {
           attempt_count: number
           block_id: string
           id: string
+          last_correct: boolean | null
           player_id: string
           solved_at: string | null
         }
@@ -376,6 +380,7 @@ export type Database = {
           attempt_count?: number
           block_id: string
           id?: string
+          last_correct?: boolean | null
           player_id: string
           solved_at?: string | null
         }
@@ -383,6 +388,7 @@ export type Database = {
           attempt_count?: number
           block_id?: string
           id?: string
+          last_correct?: boolean | null
           player_id?: string
           solved_at?: string | null
         }
@@ -714,6 +720,7 @@ export type Database = {
         Args: { p_chapter_id: string; p_condition_id: string; p_token: string }
         Returns: undefined
       }
+      block_is_visible: { Args: { p_block_id: string }; Returns: boolean }
       chapter_is_accessible: {
         Args: { p_chapter_id: string }
         Returns: boolean

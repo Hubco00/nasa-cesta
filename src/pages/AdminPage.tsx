@@ -90,7 +90,7 @@ export function AdminPage() {
                 {UNLOCK_LABEL[chapter.unlock_type] ?? chapter.unlock_type}
                 {chapter.is_final ? ' · finálna' : ''}
                 {' · '}
-                {summary[chapter.id]?.storyBlocks ?? 0} blokov v liste
+                {summary[chapter.id]?.storyBlocks ?? 0} položiek v liste
               </span>
               {(summary[chapter.id]?.pinCities.length ?? 0) > 0 && (
                 <span className="text-xs text-[var(--color-muted)]">

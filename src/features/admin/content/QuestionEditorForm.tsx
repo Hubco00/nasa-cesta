@@ -1,20 +1,36 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { removeChapterPhotos, uploadChapterPhoto } from '../../../lib/storage'
 import type { BlockQuestionConfig } from '../../chapters/types'
 import {
   adminCreateBlock,
+  adminDeleteBlock,
   adminGetBlockAnswer,
   adminSetBlockAnswer,
   adminUpdateBlock,
   type ChapterBlockRow,
 } from '../api'
+import { OutcomeFields, type OutcomeDraft } from './OutcomeFields'
 import { errorMessage, Field, FormActions, inputClass } from './ui'
 
 type AnswerMode = 'text' | 'choice'
+type Result = 'correct' | 'wrong'
+
+function draftFrom(block?: ChapterBlockRow): OutcomeDraft {
+  return {
+    text: block?.body_markdown ?? '',
+    caption: block?.caption ?? '',
+    existingPath: block?.storage_path ?? null,
+    newFile: null,
+    newPreviewUrl: null,
+  }
+}
 
 export function QuestionEditorForm({
   chapterId,
   mapPinId,
   question,
+  outcomes,
+  photoUrls,
   nextOrderIndex,
   onSaved,
   onCancel,
@@ -22,6 +38,9 @@ export function QuestionEditorForm({
   chapterId: string
   mapPinId: string | null
   question?: ChapterBlockRow
+  /** Existujúce listy po odpovedi (deti otázky s reveal_on). */
+  outcomes: ChapterBlockRow[]
+  photoUrls: Record<string, string>
   nextOrderIndex: number
   onSaved: () => void
   onCancel: () => void
@@ -37,7 +56,11 @@ export function QuestionEditorForm({
   )
   const [correctIndex, setCorrectIndex] = useState<number | null>(null)
   const [hint, setHint] = useState(config.hint ?? '')
-  const [successMessage, setSuccessMessage] = useState(config.successMessage ?? '')
+  const existingOutcome = (result: Result) => outcomes.find((o) => o.reveal_on === result)
+  const [drafts, setDrafts] = useState<Record<Result, OutcomeDraft>>(() => ({
+    correct: draftFrom(existingOutcome('correct')),
+    wrong: draftFrom(existingOutcome('wrong')),
+  }))
   const [loadingAnswer, setLoadingAnswer] = useState(Boolean(question))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -61,6 +84,56 @@ export function QuestionEditorForm({
     // Načítať iba raz pri otvorení formulára.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [question?.id])
+
+  // Náhľady vybraných fotiek uvoľniť pri zatvorení formulára.
+  const previewUrls = useRef(new Set<string>())
+  useEffect(() => {
+    const urls = previewUrls.current
+    return () => urls.forEach((u) => URL.revokeObjectURL(u))
+  }, [])
+
+  function updateDraft(result: Result, patch: Partial<OutcomeDraft>) {
+    setDrafts((prev) => ({ ...prev, [result]: { ...prev[result], ...patch } }))
+  }
+
+  function pickFile(result: Result, file: File | null) {
+    const url = file ? URL.createObjectURL(file) : null
+    if (url) previewUrls.current.add(url)
+    updateDraft(result, { newFile: file, newPreviewUrl: url })
+  }
+
+  async function saveOutcome(questionId: string, result: Result) {
+    const draft = drafts[result]
+    const existing = existingOutcome(result)
+    const oldPath = existing?.storage_path ?? null
+    const storagePath = draft.newFile
+      ? await uploadChapterPhoto(chapterId, draft.newFile)
+      : draft.existingPath
+    const caption = storagePath ? draft.caption.trim() || null : null
+
+    if (!draft.text.trim() && !storagePath) {
+      if (existing) await adminDeleteBlock(existing.id)
+    } else if (existing) {
+      await adminUpdateBlock(existing.id, {
+        body_markdown: draft.text,
+        storage_path: storagePath,
+        caption,
+      })
+    } else {
+      await adminCreateBlock({
+        chapter_id: chapterId,
+        map_pin_id: mapPinId,
+        parent_block_id: questionId,
+        block_type: 'text',
+        reveal_on: result,
+        order_index: result === 'correct' ? 10 : 20,
+        body_markdown: draft.text,
+        storage_path: storagePath,
+        caption,
+      })
+    }
+    if (oldPath && oldPath !== storagePath) await removeChapterPhotos([oldPath])
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -89,7 +162,6 @@ export function QuestionEditorForm({
       type: mode,
       ...(mode === 'choice' ? { options: cleanOptions } : {}),
       ...(hint.trim() ? { hint: hint.trim() } : {}),
-      ...(successMessage.trim() ? { successMessage: successMessage.trim() } : {}),
     }
 
     setSaving(true)
@@ -113,6 +185,8 @@ export function QuestionEditorForm({
         id = created.id
       }
       await adminSetBlockAnswer(id, answers)
+      await saveOutcome(id, 'correct')
+      await saveOutcome(id, 'wrong')
       onSaved()
     } catch (err) {
       setError(`Uloženie zlyhalo: ${errorMessage(err)}`)
@@ -226,13 +300,29 @@ export function QuestionEditorForm({
         />
       </Field>
 
-      <Field label="Správa po správnej odpovedi" hint="Voliteľné.">
-        <input
-          value={successMessage}
-          onChange={(e) => setSuccessMessage(e.target.value)}
-          className={inputClass}
-        />
-      </Field>
+      <OutcomeFields
+        title="List po správnej odpovedi"
+        hint="Voliteľné — zobrazí sa jej ako list až keď odpovie správne. Fotka je odmena."
+        placeholder="napr. Presne tak! A vieš, čo sa stalo potom…"
+        draft={drafts.correct}
+        existingUrl={
+          drafts.correct.existingPath ? photoUrls[drafts.correct.existingPath] : undefined
+        }
+        onChange={(patch) => updateDraft('correct', patch)}
+        onPickFile={(file) => pickFile('correct', file)}
+      />
+
+      <OutcomeFields
+        title="List po nesprávnej odpovedi"
+        hint="Voliteľné — zobrazí sa, keď odpovie zle (potom môže skúsiť znova)."
+        placeholder="napr. Nie, nie… spomeň si, aké bolo ráno."
+        draft={drafts.wrong}
+        existingUrl={
+          drafts.wrong.existingPath ? photoUrls[drafts.wrong.existingPath] : undefined
+        }
+        onChange={(patch) => updateDraft('wrong', patch)}
+        onPickFile={(file) => pickFile('wrong', file)}
+      />
 
       {error && <p className="text-sm text-rose-600">{error}</p>}
 

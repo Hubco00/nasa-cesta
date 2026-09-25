@@ -200,7 +200,7 @@ export async function adminContentSummary(): Promise<
   Record<string, ChapterContentSummary>
 > {
   const [blocks, pins] = await Promise.all([
-    supabase.from('chapter_blocks').select('chapter_id, map_pin_id'),
+    supabase.from('chapter_blocks').select('chapter_id, map_pin_id, parent_block_id'),
     supabase.from('chapter_map_pins').select('chapter_id, city_key'),
   ])
   if (blocks.error) throw blocks.error
@@ -208,7 +208,10 @@ export async function adminContentSummary(): Promise<
 
   const summary: Record<string, ChapterContentSummary> = {}
   const entry = (id: string) => (summary[id] ??= { storyBlocks: 0, pinCities: [] })
-  for (const b of blocks.data ?? []) if (!b.map_pin_id) entry(b.chapter_id).storyBlocks++
+  // Počíta iba položky listu (príbeh/fotka/otázka), nie ich fotky či listy po odpovedi.
+  for (const b of blocks.data ?? []) {
+    if (!b.map_pin_id && !b.parent_block_id) entry(b.chapter_id).storyBlocks++
+  }
   for (const p of pins.data ?? []) entry(p.chapter_id).pinCities.push(p.city_key)
   return summary
 }

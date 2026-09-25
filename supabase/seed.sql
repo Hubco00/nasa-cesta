@@ -219,10 +219,34 @@ insert into public.chapter_blocks (
   jsonb_build_object(
     'type', 'choice',
     'options', jsonb_build_array('Kávu', 'Zmrzlinu', 'Čaj'),
-    'hint', 'Bolo ráno a obaja sme boli ospalí.',
-    'successMessage', 'Presne tak — a bola hrozná, ale nám to bolo jedno.'
+    'hint', 'Bolo ráno a obaja sme boli ospalí.'
   )
 );
 
 insert into public.chapter_answers (block_id, correct_answers)
 values ('00000000-0000-0000-0000-000000000215', array['Kávu']);
+
+-- Listy po odpovedi na otázku (odmena) — hráčka ich uvidí až po odpovedi.
+
+insert into public.chapter_blocks (
+  id, chapter_id, map_pin_id, parent_block_id, block_type, order_index,
+  reveal_on, body_markdown, storage_path, caption
+) values
+  (
+    '00000000-0000-0000-0000-000000000216',
+    '00000000-0000-0000-0000-000000000101',
+    '00000000-0000-0000-0000-000000000301',
+    '00000000-0000-0000-0000-000000000215',
+    'text', 10, 'correct',
+    E'Presne tak — kávu. Bola hrozná, ale nám to bolo úplne jedno.',
+    'seed/reward.png', 'Tá hrozná káva'
+  ),
+  (
+    '00000000-0000-0000-0000-000000000217',
+    '00000000-0000-0000-0000-000000000101',
+    '00000000-0000-0000-0000-000000000301',
+    '00000000-0000-0000-0000-000000000215',
+    'text', 20, 'wrong',
+    E'Nie, nie… Skús si spomenúť, aké bolo ráno.',
+    null, null
+  );

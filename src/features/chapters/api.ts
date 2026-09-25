@@ -151,6 +151,26 @@ export async function verifyBlockAnswer(
   return Boolean((data as { correct?: boolean } | null)?.correct)
 }
 
+export type QuestionResult = 'correct' | 'wrong'
+
+/**
+ * List pod otázkou pre daný výsledok. Server ho vráti iba ak ho hráčka už
+ * "odomkla" odpoveďou (inak null) — pozri block_is_visible().
+ */
+export async function fetchQuestionOutcome(
+  questionId: string,
+  result: QuestionResult,
+): Promise<ChapterBlock | null> {
+  const { data, error } = await supabase
+    .from('chapter_blocks')
+    .select('*')
+    .eq('parent_block_id', questionId)
+    .eq('reveal_on', result)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
 export async function fetchBlockSolved(blockId: string): Promise<boolean> {
   const { data, error } = await supabase
     .from('player_block_progress')

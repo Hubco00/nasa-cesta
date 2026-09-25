@@ -109,8 +109,21 @@ describe.skipIf(!isLocalSupabaseUp)(
       expect(pins).toEqual([])
     })
 
-    it('otázka v obsahu: server overí odpoveď, pamätá si vyriešenie, odpovede hráčka nevidí', async () => {
+    it('otázka v obsahu: server overí odpoveď, list a fotku-odmenu vydá až po odpovedi', async () => {
       const QUESTION_BLOCK = '00000000-0000-0000-0000-000000000215'
+      const outcome = (result: 'correct' | 'wrong') =>
+        player
+          .from('chapter_blocks')
+          .select('id, body_markdown, storage_path')
+          .eq('parent_block_id', QUESTION_BLOCK)
+          .eq('reveal_on', result)
+      const rewardPhoto = () =>
+        player.storage.from('chapter-photos').createSignedUrl('seed/reward.png', 60)
+
+      // Pred odpoveďou: žiadny list ani fotka-odmena (list by prezradil odpoveď).
+      expect((await outcome('correct')).data).toEqual([])
+      expect((await outcome('wrong')).data).toEqual([])
+      expect((await rewardPhoto()).error).not.toBeNull()
 
       const wrong = await player.rpc('verify_block_answer', {
         p_block_id: QUESTION_BLOCK,
@@ -118,12 +131,20 @@ describe.skipIf(!isLocalSupabaseUp)(
       })
       expect(wrong.error).toBeNull()
       expect(wrong.data).toMatchObject({ correct: false })
+      expect((await outcome('wrong')).data).toHaveLength(1)
+      expect((await outcome('correct')).data).toEqual([])
+      expect((await rewardPhoto()).error).not.toBeNull()
 
       const right = await player.rpc('verify_block_answer', {
         p_block_id: QUESTION_BLOCK,
         p_answer: '  kávu ',
       })
       expect(right.data).toMatchObject({ correct: true })
+      const correctLetter = (await outcome('correct')).data
+      expect(correctLetter?.[0]?.body_markdown).toContain('kávu')
+      expect(correctLetter?.[0]?.storage_path).toBe('seed/reward.png')
+      expect((await outcome('wrong')).data).toEqual([])
+      expect((await rewardPhoto()).error).toBeNull()
 
       const { data: progress } = await player
         .from('player_block_progress')
