@@ -120,6 +120,12 @@ describe.skipIf(!isLocalSupabaseUp)(
       const rewardPhoto = () =>
         player.storage.from('chapter-photos').createSignedUrl('seed/reward.png', 60)
 
+      // Skrytá kapitola čaká na správnu odpoveď — dovtedy ju API vôbec nevráti.
+      const HIDDEN_CHAPTER = '00000000-0000-0000-0000-000000000106'
+      const timelineHas = async (id: string) =>
+        (await player.rpc('get_my_timeline')).data?.find((r) => r.chapter_id === id)
+      expect(await timelineHas(HIDDEN_CHAPTER)).toBeUndefined()
+
       // Pred odpoveďou: žiadny list ani fotka-odmena (list by prezradil odpoveď).
       expect((await outcome('correct')).data).toEqual([])
       expect((await outcome('wrong')).data).toEqual([])
@@ -130,7 +136,8 @@ describe.skipIf(!isLocalSupabaseUp)(
         p_answer: 'Čaj',
       })
       expect(wrong.error).toBeNull()
-      expect(wrong.data).toMatchObject({ correct: false })
+      expect(wrong.data).toMatchObject({ correct: false, unlockedChapters: [] })
+      expect(await timelineHas(HIDDEN_CHAPTER)).toBeUndefined()
       expect((await outcome('wrong')).data).toHaveLength(1)
       expect((await outcome('correct')).data).toEqual([])
       expect((await rewardPhoto()).error).not.toBeNull()
@@ -139,7 +146,11 @@ describe.skipIf(!isLocalSupabaseUp)(
         p_block_id: QUESTION_BLOCK,
         p_answer: '  kávu ',
       })
-      expect(right.data).toMatchObject({ correct: true })
+      expect(right.data).toMatchObject({
+        correct: true,
+        unlockedChapters: [{ title: 'Tajná kapitola', slug: 'tajna-kapitola' }],
+      })
+      expect((await timelineHas(HIDDEN_CHAPTER))?.status).toBe('unlocked')
       const correctLetter = (await outcome('correct')).data
       expect(correctLetter?.[0]?.body_markdown).toContain('kávu')
       expect(correctLetter?.[0]?.storage_path).toBe('seed/reward.png')
@@ -428,6 +439,50 @@ describe.skipIf(!isLocalSupabaseUp)(
         .from('chapters')
         .update({ map_x: null, map_y: null })
         .eq('id', CHAPTER_INTRO)
+    })
+    it('mazanie kapitoly: nadväzujúca sa napojí na predchodcu, závislosť na otázke zmazanie zastaví', async () => {
+      const denied = await player.rpc('admin_delete_chapter', {
+        p_chapter_id: CHAPTER_INTRO,
+      })
+      expect(denied.error).not.toBeNull()
+
+      // Na otázku v kapitole 1 čaká skrytá kapitola → zmazať nejde.
+      const blocked = await admin.rpc('admin_delete_chapter', {
+        p_chapter_id: CHAPTER_INTRO,
+      })
+      expect(blocked.error?.message).toContain('Tajná kapitola')
+
+      const [a, b, c] = [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()]
+      const chapter = (id: string, required: string | null, order: number) => ({
+        id,
+        title: `Test ${order}`,
+        slug: `test-${id}`,
+        order_index: 900 + order,
+        is_published: false,
+        unlock_type: 'manual',
+        required_chapter_id: required,
+      })
+      expect((await admin.from('chapters').insert(chapter(a, null, 1))).error).toBeNull()
+      expect((await admin.from('chapters').insert(chapter(b, a, 2))).error).toBeNull()
+      expect((await admin.from('chapters').insert(chapter(c, b, 3))).error).toBeNull()
+      await admin.from('chapter_blocks').insert({
+        chapter_id: b,
+        block_type: 'photo',
+        storage_path: 'test/fake.png',
+      })
+
+      const deleted = await admin.rpc('admin_delete_chapter', { p_chapter_id: b })
+      expect(deleted.error).toBeNull()
+      expect(deleted.data).toEqual(['test/fake.png'])
+
+      const { data: relinked } = await admin
+        .from('chapters')
+        .select('required_chapter_id')
+        .eq('id', c)
+        .single()
+      expect(relinked?.required_chapter_id).toBe(a)
+
+      await admin.from('chapters').delete().in('id', [a, c])
     })
   },
 )

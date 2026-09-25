@@ -1,3 +1,5 @@
+import { removeChapterPhotos } from '../../lib/storage'
+import { findCity } from '../map/cities'
 import { supabase } from '../../lib/supabase'
 import type { Database } from '../../types/database'
 
@@ -385,4 +387,47 @@ export async function adminResetChapterPositions(): Promise<void> {
     .update({ map_x: null, map_y: null })
     .not('id', 'is', null)
   if (error) throw error
+}
+
+// --- Podmienky odomknutia a mazanie kapitol -------------------------------
+
+export interface QuestionOption {
+  id: string
+  chapterId: string
+  label: string
+}
+
+/** Všetky otázky v obsahu (aj pri mestách) — na výber podmienky odomknutia. */
+export async function adminListQuestions(): Promise<QuestionOption[]> {
+  const { data, error } = await supabase
+    .from('chapter_blocks')
+    .select(
+      // chapters!… — chapter_blocks a chapters sú teraz prepojené dvakrát (chapter_id
+      // aj chapters.required_block_id), embed musí povedať, ktorým vzťahom ísť.
+      'id, chapter_id, body_markdown, chapters!chapter_blocks_chapter_id_fkey(title, order_index), chapter_map_pins(city_key)',
+    )
+    .eq('block_type', 'question')
+  if (error) throw error
+  return (data ?? [])
+    .map((q) => {
+      const chapter = q.chapters as { title: string; order_index: number } | null
+      const city = (q.chapter_map_pins as { city_key: string } | null)?.city_key
+      return {
+        id: q.id,
+        chapterId: q.chapter_id,
+        order: chapter?.order_index ?? 0,
+        label: `${chapter?.title ?? '?'}${city ? ` · ${findCity(city)?.label ?? city}` : ''} — ${q.body_markdown ?? ''}`,
+      }
+    })
+    .sort((a, b) => a.order - b.order)
+    .map(({ order: _order, ...rest }) => rest)
+}
+
+/** Zmaže kapitolu s celým obsahom; nadväzujúce kapitoly napojí na jej predchodcu. */
+export async function adminDeleteChapter(chapterId: string): Promise<void> {
+  const { data, error } = await supabase.rpc('admin_delete_chapter', {
+    p_chapter_id: chapterId,
+  })
+  if (error) throw error
+  await removeChapterPhotos((data as string[] | null) ?? [])
 }

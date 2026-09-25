@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { removeChapterPhotos, uploadChapterPhoto } from '../../../lib/storage'
 import { adminCreateBlock, adminUpdateBlock, type ChapterBlockRow } from '../api'
-import { errorMessage, Field, FormActions, inputClass } from './ui'
+import { getErrorMessage } from '../../../lib/errors'
+import { Field, FormActions, inputClass } from './ui'
 
 export function PhotoForm({
   chapterId,
@@ -70,7 +71,7 @@ export function PhotoForm({
       }
       onSaved()
     } catch (err) {
-      setError(`Uloženie zlyhalo: ${errorMessage(err)}`)
+      setError(`Uloženie zlyhalo: ${getErrorMessage(err)}`)
       setSaving(false)
     }
   }

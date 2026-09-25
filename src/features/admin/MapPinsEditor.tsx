@@ -9,6 +9,7 @@ import {
   adminListMapPins,
   type MapPinRow,
 } from './api'
+import { getErrorMessage } from '../../lib/errors'
 
 export function MapPinsEditor({ chapterId }: { chapterId: string }) {
   const [pins, setPins] = useState<MapPinRow[]>([])
@@ -39,7 +40,7 @@ export function MapPinsEditor({ chapterId }: { chapterId: string }) {
       await reload()
       setOpenPinId(pin.id)
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(getErrorMessage(err))
     }
   }
 

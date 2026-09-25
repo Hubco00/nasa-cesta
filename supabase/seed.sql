@@ -250,3 +250,28 @@ insert into public.chapter_blocks (
     E'Nie, nie… Skús si spomenúť, aké bolo ráno.',
     null, null
   );
+
+-- Skrytá kapitola — na mape sa objaví až po správnej odpovedi na otázku
+-- pri Dolnom Kubíne (kapitola 1). ---------------------------------------
+
+insert into public.chapters (
+  id, title, slug, description, order_index, is_published, unlock_type,
+  required_chapter_id, required_block_id, hidden_until_unlocked,
+  success_message, is_final
+) values (
+  '00000000-0000-0000-0000-000000000106',
+  'Tajná kapitola',
+  'tajna-kapitola',
+  'Objavila si ju správnou odpoveďou.',
+  6, true, 'manual',
+  null, '00000000-0000-0000-0000-000000000215', true,
+  'Tajomstvo odhalené.', false
+);
+
+insert into public.chapter_blocks (id, chapter_id, block_type, order_index, title, body_markdown)
+values (
+  '00000000-0000-0000-0000-000000000221',
+  '00000000-0000-0000-0000-000000000106',
+  'text', 10, 'Psst…',
+  E'Túto kapitolu nevidí nikto, kým správne neodpovie na otázku v Dolnom Kubíne.'
+);

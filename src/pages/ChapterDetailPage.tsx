@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Layout } from '../components/Layout'
+import { LoadError } from '../components/LoadError'
 import { ChapterActionPanel } from '../features/chapters/ChapterActionPanel'
 import { ChapterBlockRenderer } from '../features/chapters/ChapterBlockRenderer'
 import {
@@ -22,6 +23,8 @@ export function ChapterDetailPage() {
   const [status, setStatus] = useState<string>('locked')
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     if (!slug) return
@@ -48,11 +51,29 @@ export function ChapterDetailPage() {
       setLoading(false)
     }
 
-    void load()
+    load().catch(() => {
+      if (!active) return
+      setFailed(true)
+      setLoading(false)
+    })
     return () => {
       active = false
     }
-  }, [slug])
+  }, [slug, attempt])
+
+  if (failed) {
+    return (
+      <Layout back={{ to: '/chapters', label: 'Späť na cestu' }}>
+        <LoadError
+          onRetry={() => {
+            setFailed(false)
+            setLoading(true)
+            setAttempt((n) => n + 1)
+          }}
+        />
+      </Layout>
+    )
+  }
 
   if (loading) {
     return (

@@ -176,6 +176,11 @@ insertom do `auth.users` — iba cez Supabase Auth:
    → rozbaľ ho a pridávaj príbehy/fotky/otázky rovnako ako vyššie. Hráčke sa
    zobrazia po ťuknutí na guličku pri meste na mape kapitoly.
 5. Keď je kapitola hotová, prepni ju na **Publikované**.
+   V **Nastaveniach kapitoly → Kedy sa kapitola odomkne** nastavíš, či sa
+   odomkne po dokončení inej kapitoly, po správnej odpovedi na otázku (aj z
+   inej kapitoly či mesta), alebo po oboch; a či má byť dovtedy na mape
+   **úplne skrytá**. Kapitolu zmažeš krížikom v zozname alebo tlačidlom v
+   nastaveniach — kapitola, ktorá na ňu nadväzovala, sa napojí na predchádzajúcu.
 6. **Mapa kapitol** (odkaz v admin paneli) — úvodná cesta, ktorú hráčka vidí po
    prihlásení: kapitoly posúvaš ťahaním, cestu kreslíš ťuknutím na kapitolu a
    potom na ďalšiu (pokračuje sa od poslednej), ťuknutím na čiaru nastavíš

@@ -26,6 +26,7 @@ import {
   toPercent,
   type Point,
 } from '../../features/chapters/roadLayout'
+import { getErrorMessage } from '../../lib/errors'
 
 interface Drag {
   id: string
@@ -69,7 +70,7 @@ export function RoadMapEditorPage() {
     try {
       await action()
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(getErrorMessage(err))
     }
   }
 
@@ -351,7 +352,10 @@ export function RoadMapEditorPage() {
                   </div>
                   <span className="max-w-[6.5rem] text-center font-[family-name:var(--font-display)] text-xs leading-tight">
                     {chapter.title}
-                    {!chapter.is_published && ' (skryté)'}
+                    {!chapter.is_published && ' (nepublikovaná)'}
+                    {chapter.is_published &&
+                      chapter.hidden_until_unlocked &&
+                      ' (skrytá do odomknutia)'}
                   </span>
                 </div>
               )

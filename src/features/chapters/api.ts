@@ -146,16 +146,26 @@ export async function verifyLocation(
 }
 
 /** Otázka v obsahu (nie podmienka odomknutia) — správnosť overí server. */
+export interface BlockAnswerResult {
+  correct: boolean
+  /** Kapitoly, ktoré sa touto správnou odpoveďou práve odomkli. */
+  unlockedChapters: { title: string; slug: string }[]
+}
+
 export async function verifyBlockAnswer(
   blockId: string,
   answer: string,
-): Promise<boolean> {
+): Promise<BlockAnswerResult> {
   const { data, error } = await supabase.rpc('verify_block_answer', {
     p_block_id: blockId,
     p_answer: answer,
   })
   if (error) throw error
-  return Boolean((data as { correct?: boolean } | null)?.correct)
+  const result = (data ?? {}) as Partial<BlockAnswerResult>
+  return {
+    correct: Boolean(result.correct),
+    unlockedChapters: result.unlockedChapters ?? [],
+  }
 }
 
 export type QuestionResult = 'correct' | 'wrong'

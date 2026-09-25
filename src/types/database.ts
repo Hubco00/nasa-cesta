@@ -343,6 +343,7 @@ export type Database = {
           created_at: string
           description: string | null
           failure_message: string | null
+          hidden_until_unlocked: boolean
           hint: string | null
           id: string
           is_final: boolean
@@ -354,6 +355,7 @@ export type Database = {
           order_index: number
           qr_token_hash: string | null
           question_config: Json | null
+          required_block_id: string | null
           required_chapter_id: string | null
           slug: string
           success_message: string | null
@@ -367,6 +369,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           failure_message?: string | null
+          hidden_until_unlocked?: boolean
           hint?: string | null
           id?: string
           is_final?: boolean
@@ -378,6 +381,7 @@ export type Database = {
           order_index?: number
           qr_token_hash?: string | null
           question_config?: Json | null
+          required_block_id?: string | null
           required_chapter_id?: string | null
           slug: string
           success_message?: string | null
@@ -391,6 +395,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           failure_message?: string | null
+          hidden_until_unlocked?: boolean
           hint?: string | null
           id?: string
           is_final?: boolean
@@ -402,6 +407,7 @@ export type Database = {
           order_index?: number
           qr_token_hash?: string | null
           question_config?: Json | null
+          required_block_id?: string | null
           required_chapter_id?: string | null
           slug?: string
           success_message?: string | null
@@ -410,6 +416,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'chapters_required_block_id_fkey'
+            columns: ['required_block_id']
+            isOneToOne: false
+            referencedRelation: 'chapter_blocks'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'chapters_required_chapter_id_fkey'
             columns: ['required_chapter_id']
@@ -767,6 +780,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_delete_chapter: {
+        Args: { p_chapter_id: string }
+        Returns: string[]
+      }
       admin_reset_progress: {
         Args: { p_player_id: string }
         Returns: undefined
@@ -780,14 +797,23 @@ export type Database = {
         Returns: undefined
       }
       block_is_visible: { Args: { p_block_id: string }; Returns: boolean }
+      chapter_effective_status: {
+        Args: { p_chapter_id: string }
+        Returns: string
+      }
       chapter_is_accessible: {
         Args: { p_chapter_id: string }
         Returns: boolean
       }
+      chapter_is_on_map: { Args: { p_chapter_id: string }; Returns: boolean }
       chapter_is_published: { Args: { p_chapter_id: string }; Returns: boolean }
       complete_manual_step: { Args: { p_chapter_id: string }; Returns: Json }
       effective_status: {
-        Args: { p_required_chapter_id: string; p_stored_status: string }
+        Args: {
+          p_required_block_id: string
+          p_required_chapter_id: string
+          p_stored_status: string
+        }
         Returns: string
       }
       ensure_chapter_unlocked: {

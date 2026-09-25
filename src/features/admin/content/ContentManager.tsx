@@ -12,6 +12,7 @@ import {
 import { PhotoForm } from './PhotoForm'
 import { QuestionEditorForm } from './QuestionEditorForm'
 import { StoryForm } from './StoryForm'
+import { getErrorMessage } from '../../../lib/errors'
 
 type Kind = 'story' | 'photo' | 'question'
 type OpenForm = { kind: Kind; block?: ChapterBlockRow } | null
@@ -44,6 +45,7 @@ export function ContentManager({
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState<OpenForm>(null)
+  const [error, setError] = useState<string | null>(null)
 
   async function reload() {
     const rows = await adminListBlocks(chapterId, mapPinId)
@@ -79,7 +81,18 @@ export function ContentManager({
     )
       return
     const paths = [item, ...withPhoto].flatMap((b) => b.storage_path ?? [])
-    await adminDeleteBlock(item.id) // deti zmaže ON DELETE CASCADE
+    setError(null)
+    try {
+      await adminDeleteBlock(item.id) // deti zmaže ON DELETE CASCADE
+    } catch (err) {
+      const message = getErrorMessage(err)
+      setError(
+        message.includes('required_block_id')
+          ? 'Túto otázku nemožno zmazať — od jej správnej odpovede závisí odomknutie inej kapitoly. Najprv tej kapitole zmeň podmienku v Nastaveniach kapitoly.'
+          : `Zmazanie zlyhalo: ${message}`,
+      )
+      return
+    }
     await removeChapterPhotos(paths)
     await reload()
   }
@@ -99,6 +112,7 @@ export function ContentManager({
   return (
     <div className="flex flex-col gap-3">
       {loading && <p className="text-sm text-[var(--color-muted)]">Načítavam…</p>}
+      {error && <p className="text-sm text-rose-600">{error}</p>}
 
       {!loading && items.length === 0 && (
         <p className="rounded-lg border border-dashed border-[var(--paper-border)] p-4 text-center text-sm text-[var(--color-muted)]">

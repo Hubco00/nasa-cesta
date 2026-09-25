@@ -1,5 +1,3 @@
-/* eslint-disable react-refresh/only-export-components -- zdieľané drobné prvky
-   formulárov v admine (komponenty + triedy) */
 import type { ReactNode } from 'react'
 
 export const inputClass =
@@ -50,8 +48,4 @@ export function FormActions({
       </button>
     </div>
   )
-}
-
-export function errorMessage(err: unknown): string {
-  return err instanceof Error ? err.message : String(err)
 }

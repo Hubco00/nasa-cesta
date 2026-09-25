@@ -8,16 +8,20 @@ import { QrTokenEditor } from '../../features/admin/QrTokenEditor'
 import {
   adminCreateChapter,
   adminGetChapterAnswer,
+  adminDeleteChapter,
   adminGetChapter,
   adminListChapters,
+  adminListQuestions,
   adminSetChapterAnswer,
   adminUpdateChapter,
   type ChapterRow,
+  type QuestionOption,
 } from '../../features/admin/api'
 import { slugify } from '../../lib/validation'
+import { getErrorMessage } from '../../lib/errors'
 
 function toErrorMessage(err: unknown): string {
-  const message = err instanceof Error ? err.message : String(err)
+  const message = getErrorMessage(err)
   if (message.includes('chapters_slug_key')) {
     return 'Kapitola s týmto slugom už existuje — zvoľ iný slug.'
   }
@@ -47,6 +51,10 @@ export function ChapterEditorPage() {
   const [description, setDescription] = useState('')
   const [unlockType, setUnlockType] = useState<(typeof UNLOCK_TYPES)[number]>('manual')
   const [requiredChapterId, setRequiredChapterId] = useState('')
+  const [requiredBlockId, setRequiredBlockId] = useState('')
+  const [hiddenUntilUnlocked, setHiddenUntilUnlocked] = useState(false)
+  const [questions, setQuestions] = useState<QuestionOption[]>([])
+  const [deleting, setDeleting] = useState(false)
   const [isFinal, setIsFinal] = useState(false)
   const [hint, setHint] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -63,6 +71,7 @@ export function ChapterEditorPage() {
 
   useEffect(() => {
     void adminListChapters().then(setAllChapters)
+    void adminListQuestions().then(setQuestions)
   }, [])
 
   useEffect(() => {
@@ -75,6 +84,8 @@ export function ChapterEditorPage() {
       setDescription(row.description ?? '')
       setUnlockType(row.unlock_type as (typeof UNLOCK_TYPES)[number])
       setRequiredChapterId(row.required_chapter_id ?? '')
+      setRequiredBlockId(row.required_block_id ?? '')
+      setHiddenUntilUnlocked(row.hidden_until_unlocked)
       setIsFinal(row.is_final)
       setHint(row.hint ?? '')
       setSuccessMessage(row.success_message ?? '')
@@ -115,6 +126,8 @@ export function ChapterEditorPage() {
         description: description || null,
         unlock_type: unlockType,
         required_chapter_id: requiredChapterId || null,
+        required_block_id: requiredBlockId || null,
+        hidden_until_unlocked: hiddenUntilUnlocked,
         is_final: isFinal,
         hint: hint || null,
         success_message: successMessage || null,
@@ -151,6 +164,24 @@ export function ChapterEditorPage() {
     }
   }
 
+  async function deleteChapter() {
+    if (!id || !chapter) return
+    const ok = confirm(
+      `Zmazať kapitolu „${chapter.title}“ aj s celým obsahom (príbehy, fotky, otázky, ` +
+        'miesta na mape) a postupom hráčky v nej? Nedá sa to vrátiť.',
+    )
+    if (!ok) return
+    setDeleting(true)
+    setError(null)
+    try {
+      await adminDeleteChapter(id)
+      navigate('/admin', { replace: true })
+    } catch (err) {
+      setError(toErrorMessage(err))
+      setDeleting(false)
+    }
+  }
+
   async function togglePublished() {
     if (!id || !chapter) return
     const updated = await adminUpdateChapter(id, { is_published: !chapter.is_published })
@@ -183,7 +214,7 @@ export function ChapterEditorPage() {
           : 'bg-rose-100 text-rose-800'
       }`}
     >
-      {chapter.is_published ? 'Publikované' : 'Skryté'}
+      {chapter.is_published ? 'Publikované' : 'Nepublikované'}
     </button>
   )
 
@@ -282,23 +313,64 @@ export function ChapterEditorPage() {
             </select>
           </label>
 
-          <label className="flex flex-col gap-1 text-sm">
-            Predchádzajúca kapitola (podmienka postupu)
-            <select
-              value={requiredChapterId}
-              onChange={(e) => setRequiredChapterId(e.target.value)}
-              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-            >
-              <option value="">— žiadna (prvá kapitola) —</option>
-              {allChapters
-                .filter((c) => c.id !== id)
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-            </select>
-          </label>
+          <fieldset className="flex flex-col gap-3 rounded-xl border border-[var(--paper-border)] p-3">
+            <legend className="px-1 text-sm font-medium">Kedy sa kapitola odomkne</legend>
+            <p className="text-xs text-[var(--color-muted)]">
+              Odomkne sa, keď sú splnené všetky nastavené podmienky. Bez podmienky je
+              dostupná hneď.
+            </p>
+
+            <label className="flex flex-col gap-1 text-sm">
+              Po dokončení kapitoly
+              <select
+                value={requiredChapterId}
+                onChange={(e) => setRequiredChapterId(e.target.value)}
+                className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+              >
+                <option value="">— žiadna —</option>
+                {allChapters
+                  .filter((c) => c.id !== id)
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title}
+                    </option>
+                  ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm">
+              Po správnej odpovedi na otázku
+              <select
+                value={requiredBlockId}
+                onChange={(e) => setRequiredBlockId(e.target.value)}
+                className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+              >
+                <option value="">— žiadna —</option>
+                {questions
+                  .filter((q) => q.chapterId !== id)
+                  .map((q) => (
+                    <option key={q.id} value={q.id}>
+                      {q.label}
+                    </option>
+                  ))}
+              </select>
+            </label>
+
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={hiddenUntilUnlocked}
+                onChange={(e) => setHiddenUntilUnlocked(e.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                Skryť na mape, kým sa neodomkne
+                <span className="block text-xs text-[var(--color-muted)]">
+                  Inak ju hráčka vidí ako zamknutú (zámok s číslom).
+                </span>
+              </span>
+            </label>
+          </fieldset>
 
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -409,6 +481,18 @@ export function ChapterEditorPage() {
             {saving ? 'Ukladám…' : isNew ? 'Vytvoriť kapitolu' : 'Uložiť zmeny'}
             {answerSaved && ' ✓'}
           </button>
+
+          {!isNew && (
+            <div className="mt-3 border-t border-[var(--paper-border)] pt-3">
+              <button
+                onClick={() => void deleteChapter()}
+                disabled={deleting}
+                className="text-sm font-medium text-rose-600 disabled:opacity-60"
+              >
+                {deleting ? 'Mažem…' : 'Zmazať kapitolu'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

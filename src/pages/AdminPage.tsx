@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import {
   adminContentSummary,
+  adminDeleteChapter,
   adminListChapters,
   adminSwapChapterOrder,
   adminUpdateChapter,
 } from '../features/admin/api'
 import type { ChapterContentSummary, ChapterRow } from '../features/admin/api'
 import { findCity } from '../features/map/cities'
+import { getErrorMessage } from '../lib/errors'
 
 const UNLOCK_LABEL: Record<string, string> = {
   manual: 'manuál',
@@ -39,6 +41,23 @@ export function AdminPage() {
       await reload()
     })()
   }, [])
+
+  const [error, setError] = useState<string | null>(null)
+
+  async function remove(chapter: ChapterRow) {
+    const ok = confirm(
+      `Zmazať kapitolu „${chapter.title}“ aj s celým obsahom (príbehy, fotky, otázky, ` +
+        'miesta na mape) a postupom hráčky v nej? Nedá sa to vrátiť.',
+    )
+    if (!ok) return
+    setError(null)
+    try {
+      await adminDeleteChapter(chapter.id)
+      await reload()
+    } catch (err) {
+      setError(getErrorMessage(err))
+    }
+  }
 
   async function togglePublished(chapter: ChapterRow) {
     await adminUpdateChapter(chapter.id, { is_published: !chapter.is_published })
@@ -73,6 +92,7 @@ export function AdminPage() {
       </div>
 
       {loading && <p className="text-sm text-[var(--color-muted)]">Načítavam…</p>}
+      {error && <p className="mb-3 text-sm text-rose-600">Zmazanie zlyhalo: {error}</p>}
 
       <ul className="flex flex-col gap-2">
         {chapters.map((chapter, index) => (
@@ -93,6 +113,19 @@ export function AdminPage() {
                 {' · '}
                 {summary[chapter.id]?.storyBlocks ?? 0} položiek v liste
               </span>
+              {(chapter.required_chapter_id || chapter.required_block_id) && (
+                <span className="text-xs text-[var(--color-muted)]">
+                  odomkne sa po:{' '}
+                  {[
+                    chapter.required_chapter_id &&
+                      `„${chapters.find((c) => c.id === chapter.required_chapter_id)?.title ?? '?'}“`,
+                    chapter.required_block_id && 'správnej odpovedi na otázku',
+                  ]
+                    .filter(Boolean)
+                    .join(' + ')}
+                  {chapter.hidden_until_unlocked && ' · dovtedy skrytá na mape'}
+                </span>
+              )}
               {(summary[chapter.id]?.pinCities.length ?? 0) > 0 && (
                 <span className="text-xs text-[var(--color-muted)]">
                   mapa:{' '}
@@ -127,7 +160,15 @@ export function AdminPage() {
                     : 'bg-rose-100 text-rose-800'
                 }`}
               >
-                {chapter.is_published ? 'Publikované' : 'Skryté'}
+                {chapter.is_published ? 'Publikované' : 'Nepublikované'}
+              </button>
+              <button
+                onClick={() => void remove(chapter)}
+                className="rounded px-1 text-sm text-rose-600"
+                aria-label={`Zmazať kapitolu ${chapter.title}`}
+                title="Zmazať kapitolu"
+              >
+                ✕
               </button>
             </div>
           </li>

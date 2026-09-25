@@ -10,7 +10,8 @@ import {
   type ChapterBlockRow,
 } from '../api'
 import { OutcomeFields, type OutcomeDraft } from './OutcomeFields'
-import { errorMessage, Field, FormActions, inputClass } from './ui'
+import { getErrorMessage } from '../../../lib/errors'
+import { Field, FormActions, inputClass } from './ui'
 
 type AnswerMode = 'text' | 'choice'
 type Result = 'correct' | 'wrong'
@@ -189,7 +190,7 @@ export function QuestionEditorForm({
       await saveOutcome(id, 'wrong')
       onSaved()
     } catch (err) {
-      setError(`Uloženie zlyhalo: ${errorMessage(err)}`)
+      setError(`Uloženie zlyhalo: ${getErrorMessage(err)}`)
       setSaving(false)
     }
   }

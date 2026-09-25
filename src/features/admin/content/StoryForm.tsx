@@ -6,7 +6,8 @@ import {
   adminUpdateBlock,
   type ChapterBlockRow,
 } from '../api'
-import { errorMessage, Field, FormActions, inputClass } from './ui'
+import { getErrorMessage } from '../../../lib/errors'
+import { Field, FormActions, inputClass } from './ui'
 
 interface ExistingPhoto {
   block: ChapterBlockRow
@@ -124,7 +125,7 @@ export function StoryForm({
 
       onSaved()
     } catch (err) {
-      setError(`Uloženie zlyhalo: ${errorMessage(err)}`)
+      setError(`Uloženie zlyhalo: ${getErrorMessage(err)}`)
       setSaving(false)
     }
   }

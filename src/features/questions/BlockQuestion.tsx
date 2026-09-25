@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { renderMarkdownSafe } from '../../lib/security'
 import { LetterPhotos } from '../chapters/PhotoFigure'
 import {
@@ -19,6 +20,7 @@ export function BlockQuestion({ block }: { block: ChapterBlock }) {
   const [answer, setAnswer] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(false)
+  const [unlocked, setUnlocked] = useState<{ title: string; slug: string }[]>([])
 
   async function showOutcome(result: QuestionResult) {
     setOutcome(await fetchQuestionOutcome(block.id, result).catch(() => null))
@@ -49,8 +51,9 @@ export function BlockQuestion({ block }: { block: ChapterBlock }) {
     setSubmitting(true)
     setError(false)
     try {
-      const correct = await verifyBlockAnswer(block.id, answer)
+      const { correct, unlockedChapters } = await verifyBlockAnswer(block.id, answer)
       await showOutcome(correct ? 'correct' : 'wrong')
+      setUnlocked(unlockedChapters)
       setState(correct ? 'solved' : 'wrong')
     } catch {
       setError(true)
@@ -137,6 +140,27 @@ export function BlockQuestion({ block }: { block: ChapterBlock }) {
       {outcome && (state === 'solved' || state === 'wrong') && (
         <OutcomeLetter key={outcome.id} letter={outcome} correct={state === 'solved'} />
       )}
+
+      {unlocked.map((chapter) => (
+        <Link
+          key={chapter.slug}
+          to={`/chapters/${chapter.slug}`}
+          className="animate-unlock flex items-center gap-3 rounded-lg border border-[var(--color-gold-500)] bg-[var(--color-gold-400)]/20 px-4 py-3"
+        >
+          <span aria-hidden="true" className="text-xl">
+            ✦
+          </span>
+          <span className="flex-1">
+            <span className="block text-xs uppercase tracking-wider opacity-70">
+              Odomkla sa nová kapitola
+            </span>
+            <span className="font-[family-name:var(--font-display)]">
+              {chapter.title}
+            </span>
+          </span>
+          <span aria-hidden="true">→</span>
+        </Link>
+      ))}
     </div>
   )
 }
