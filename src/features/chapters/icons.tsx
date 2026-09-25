@@ -158,6 +158,134 @@ export function ScrollIcon({ className }: IconProps) {
   )
 }
 
+// --- Dekoratívne prvky fantasy mapy (ChapterMapPath) — iba ambientná grafika ---
+
+export function CastleIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M10 58V30h6v-6h5v6h4v-9h6v-6h4v6h6v9h4v-6h5v6h6v28"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      <path d="M10 58h44" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M24 58V44a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M32 12v-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+export function DragonIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M6 40c6-2 10-7 11-13 1 5 4 8 8 8 1-6 5-10 11-11-2 4-2 8 1 11 4 4 10 4 14-1-3 8-11 13-19 12-3 5-9 8-15 6 3-2 5-5 5-9-6 2-12 0-16-3Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      <circle cx="47" cy="26" r="1.4" fill="currentColor" />
+    </svg>
+  )
+}
+
+export function WavesIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M4 24c5-4 9-4 14 0s9 4 14 0 9-4 14 0 9 4 14 0"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4 34c5-4 9-4 14 0s9 4 14 0 9-4 14 0 9 4 14 0"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4 44c5-4 9-4 14 0s9 4 14 0 9-4 14 0 9 4 14 0"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+export function MountainIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M4 50 20 22l9 12 5-7 26 23Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M20 22 24 28 17 36"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M34 27 40 35 30 40"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export function TreesIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M16 40 24 24l8 16h-5l7 12H14l7-12Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M38 44 45 30l7 14h-4l5.5 8H36.5l5.5-8Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export function CompassIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
+      <circle cx="32" cy="32" r="22" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M32 4v6M32 54v6M4 32h6M54 32h6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M32 20 38 32 32 44 26 32Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export function unlockTypeIcon(unlockType: string, className?: string) {
   switch (unlockType) {
     case 'question':

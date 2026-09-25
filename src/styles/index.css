@@ -15,41 +15,105 @@
   --color-gold-400: #d8b26a;
   --color-gold-500: #c39a4a;
 
-  --font-display: 'Georgia', 'Iowan Old Style', serif;
+  --font-display: 'Cinzel', 'Georgia', serif;
+  --font-body: 'EB Garamond', 'Iowan Old Style', Georgia, serif;
 }
 
 :root {
   color-scheme: light;
   --color-bg: var(--color-rose-50);
-  --color-surface: #ffffff;
+  --color-surface: #f7ecd6;
   --color-text: var(--color-rose-900);
-  --color-muted: #7a6266;
+  --color-muted: #7a6256;
   --color-accent: var(--color-rose-600);
+
+  /* Papierus/parchment povrch pre "listy" a karty */
+  --paper-1: #faf1da;
+  --paper-2: #eeddb3;
+  --paper-border: rgba(120, 80, 40, 0.28);
+  --paper-ink: #4a2e1f;
+  --paper-shadow: rgba(74, 26, 36, 0.35);
+
+  --map-road: #c7a879;
+  --map-road-line: #fbf0d9;
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
   --color-bg: #241318;
-  --color-surface: #341c22;
+  --color-surface: #3a2419;
   --color-text: #f6e6e8;
-  --color-muted: #c9a8ae;
+  --color-muted: #cbb29a;
   --color-accent: var(--color-rose-300);
+
+  --paper-1: #4a3624;
+  --paper-2: #3a2a1c;
+  --paper-border: rgba(230, 200, 150, 0.22);
+  --paper-ink: #f1e2c4;
+  --paper-shadow: rgba(0, 0, 0, 0.5);
+
+  --map-road: #6b5438;
+  --map-road-line: #d8c39a;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
     --color-bg: #241318;
-    --color-surface: #341c22;
+    --color-surface: #3a2419;
     --color-text: #f6e6e8;
-    --color-muted: #c9a8ae;
+    --color-muted: #cbb29a;
     --color-accent: var(--color-rose-300);
+
+    --paper-1: #4a3624;
+    --paper-2: #3a2a1c;
+    --paper-border: rgba(230, 200, 150, 0.22);
+    --paper-ink: #f1e2c4;
+    --paper-shadow: rgba(0, 0, 0, 0.5);
+
+    --map-road: #6b5438;
+    --map-road-line: #d8c39a;
   }
 }
 
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+/* Papierusový/parchment povrch — pre "listy" (texty kapitol) a iné písané karty */
+.paper {
+  position: relative;
+  color: var(--paper-ink);
+  background:
+    radial-gradient(ellipse at 15% 10%, rgba(255, 255, 255, 0.4), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgba(120, 80, 40, 0.14), transparent 55%),
+    linear-gradient(150deg, var(--paper-1) 0%, var(--paper-2) 100%);
+  border: 1px solid var(--paper-border);
+  box-shadow:
+    0 12px 28px -14px var(--paper-shadow),
+    inset 0 0 32px rgba(120, 80, 40, 0.1);
+}
+
+.paper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image:
+    repeating-radial-gradient(
+      circle at 22% 35%,
+      rgba(90, 60, 30, 0.06) 0 1px,
+      transparent 1px 3px
+    ),
+    repeating-radial-gradient(
+      circle at 68% 72%,
+      rgba(90, 60, 30, 0.05) 0 1px,
+      transparent 1px 4px
+    );
+  mix-blend-mode: multiply;
 }
 
 @keyframes unlock-pop {
@@ -106,6 +170,25 @@ body {
 }
 
 .prose-romantic strong {
+  color: var(--color-accent);
+}
+
+.paper .prose-romantic {
+  color: var(--paper-ink);
+}
+
+.paper .prose-romantic blockquote {
+  color: var(--paper-ink);
+  opacity: 0.8;
+}
+
+/* Iluminovaná prvá litera na začiatku listu — jemný fantasy detail */
+.paper .prose-romantic > p:first-of-type::first-letter {
+  font-family: var(--font-display);
+  font-size: 2.75em;
+  line-height: 0.75;
+  float: left;
+  padding: 0.05em 0.1em 0 0;
   color: var(--color-accent);
 }
 

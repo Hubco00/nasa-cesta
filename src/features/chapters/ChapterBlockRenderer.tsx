@@ -41,10 +41,12 @@ function BlockNodeView({
       }}
     >
       {node.block_type === 'text' && node.body_markdown && (
-        <div
-          className="prose-romantic"
-          dangerouslySetInnerHTML={{ __html: renderMarkdownSafe(node.body_markdown) }}
-        />
+        <div className="paper rounded-lg p-5 sm:p-6">
+          <div
+            className="prose-romantic font-[family-name:var(--font-body)]"
+            dangerouslySetInnerHTML={{ __html: renderMarkdownSafe(node.body_markdown) }}
+          />
+        </div>
       )}
 
       {node.block_type === 'photo' && <PhotoBlock node={node} />}

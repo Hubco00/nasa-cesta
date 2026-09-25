@@ -63,7 +63,7 @@ export function ChapterDetailPage() {
         <div className="flex flex-col items-center gap-3 text-center">
           <p>Kapitola nebola nájdená.</p>
           <Link to="/chapters" className="text-[var(--color-accent)] underline">
-            Späť na časovú os
+            ← Späť na mapu
           </Link>
         </div>
       </Layout>
@@ -76,7 +76,7 @@ export function ChapterDetailPage() {
         <div className="flex flex-col items-center gap-3 text-center">
           <p className="text-[var(--color-muted)]">Táto kapitola je zatiaľ zamknutá.</p>
           <Link to="/chapters" className="text-[var(--color-accent)] underline">
-            Späť na časovú os
+            ← Späť na mapu
           </Link>
         </div>
       </Layout>
@@ -91,6 +91,12 @@ export function ChapterDetailPage() {
         }
       >
         <header>
+          <Link
+            to="/chapters"
+            className="mb-2 inline-block text-sm text-[var(--color-accent)] underline-offset-2 hover:underline"
+          >
+            ← Späť na mapu
+          </Link>
           <h1 className="font-[family-name:var(--font-display)] text-2xl text-[var(--color-text)]">
             {chapter.title}
           </h1>
