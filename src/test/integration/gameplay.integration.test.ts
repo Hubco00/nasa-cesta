@@ -46,12 +46,12 @@ describe.skipIf(!isLocalSupabaseUp)(
     beforeAll(async () => {
       const [playerAuth, adminAuth] = await Promise.all([
         player.auth.signInWithPassword({
-          email: 'player@example.com',
-          password: 'local-dev-player',
+          email: 'viki@nasa-cesta.local',
+          password: '123',
         }),
         admin.auth.signInWithPassword({
-          email: 'admin@example.com',
-          password: 'local-dev-admin',
+          email: 'hubco@nasa-cesta.local',
+          password: '123',
         }),
       ])
       expect(playerAuth.error).toBeNull()

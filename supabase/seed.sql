@@ -21,25 +21,25 @@ insert into auth.users (
     '00000000-0000-0000-0000-000000000000',
     '11111111-1111-1111-1111-111111111111',
     'authenticated', 'authenticated',
-    'admin@example.com',
-    extensions.crypt('local-dev-admin', extensions.gen_salt('bf')),
+    'hubco@nasa-cesta.local',
+    extensions.crypt('123', extensions.gen_salt('bf')),
     now(), now(), now(),
-    '{"provider":"email","providers":["email"]}', '{"display_name":"Admin"}',
+    '{"provider":"email","providers":["email"]}', '{"display_name":"Hubco"}',
     '', '', '', '', '', '', '', ''
   ),
   (
     '00000000-0000-0000-0000-000000000000',
     '22222222-2222-2222-2222-222222222222',
     'authenticated', 'authenticated',
-    'player@example.com',
-    extensions.crypt('local-dev-player', extensions.gen_salt('bf')),
+    'viki@nasa-cesta.local',
+    extensions.crypt('123', extensions.gen_salt('bf')),
     now(), now(), now(),
-    '{"provider":"email","providers":["email"]}', '{"display_name":"Hráčka"}',
+    '{"provider":"email","providers":["email"]}', '{"display_name":"Viki"}',
     '', '', '', '', '', '', '', ''
   )
 on conflict (id) do nothing;
 
-update public.profiles set role = 'admin' where email = 'admin@example.com';
+update public.profiles set role = 'admin' where email = 'hubco@nasa-cesta.local';
 
 -- Ukážkové kapitoly -----------------------------------------------------
 

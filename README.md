@@ -69,12 +69,13 @@ VITE_SUPABASE_ANON_KEY=<anon key z výstupu supabase start>
 Migrácie z `supabase/migrations/` a dáta z `supabase/seed.sql` sa aplikujú
 automaticky. Studio (admin UI nad databázou) beží na `http://127.0.0.1:54323`.
 
-Seedované testovacie účty (**iba lokálny dev, nikdy takto na produkcii**):
+Seedované účty pre lokálny vývoj (prihlasuje sa **menom**, appka k nemu
+doplní `@nasa-cesta.local`; plný e-mail funguje tiež):
 
-| Rola   | E-mail               | Heslo              |
-| ------ | -------------------- | ------------------ |
-| admin  | `admin@example.com`  | `local-dev-admin`  |
-| player | `player@example.com` | `local-dev-player` |
+| Rola   | Meno    | Heslo |
+| ------ | ------- | ----- |
+| admin  | `hubco` | `123` |
+| player | `viki`  | `123` |
 
 Užitočné príkazy:
 
@@ -106,12 +107,16 @@ npx supabase gen types typescript --local > src/types/database.ts
 Auth používateľov na hostovanom projekte nikdy nevytváraj priamym SQL
 insertom do `auth.users` — iba cez Supabase Auth:
 
-1. Zaregistruj sa v appke bežným spôsobom (alebo cez Dashboard →
-   Authentication → Add user). Vznikne profil s rolou `player`.
-2. V **SQL Editor** spusti (nahraď e-mail):
+1. Dashboard → **Authentication → Add user → Create new user**, e-mail
+   `meno@nasa-cesta.local` (napr. `viki@nasa-cesta.local`, `hubco@nasa-cesta.local`),
+   zaškrtni **Auto Confirm User** (na tieto adresy nechodí pošta). Vznikne
+   profil s rolou `player`. Hostovaný Supabase vyžaduje heslo aspoň 6 znakov.
+2. Pre admina v **SQL Editor** spusti:
    ```sql
-   update public.profiles set role = 'admin' where email = 'tvoj@email.sk';
+   update public.profiles set role = 'admin' where email = 'hubco@nasa-cesta.local';
    ```
+3. Repozitár je verejný, takže mená sú známe — na produkcii daj adminovi
+   silné heslo (admin vie meniť a mazať obsah).
 
 ## Cloudflare Pages deployment
 
