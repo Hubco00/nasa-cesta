@@ -33,9 +33,6 @@
   --paper-border: rgba(120, 80, 40, 0.28);
   --paper-ink: #4a2e1f;
   --paper-shadow: rgba(74, 26, 36, 0.35);
-
-  --map-road: #c7a879;
-  --map-road-line: #fbf0d9;
 }
 
 :root[data-theme='dark'] {
@@ -51,9 +48,6 @@
   --paper-border: rgba(230, 200, 150, 0.22);
   --paper-ink: #f1e2c4;
   --paper-shadow: rgba(0, 0, 0, 0.5);
-
-  --map-road: #6b5438;
-  --map-road-line: #d8c39a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -70,9 +64,6 @@
     --paper-border: rgba(230, 200, 150, 0.22);
     --paper-ink: #f1e2c4;
     --paper-shadow: rgba(0, 0, 0, 0.5);
-
-    --map-road: #6b5438;
-    --map-road-line: #d8c39a;
   }
 }
 

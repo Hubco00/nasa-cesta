@@ -3,6 +3,7 @@ import type {
   ChapterBlock,
   ChapterDetail,
   MapPin,
+  RoadSegment,
   TimelineEntry,
   UnlockCondition,
   VerifyAnswerResult,
@@ -12,6 +13,12 @@ import type {
 
 export async function fetchTimeline(): Promise<TimelineEntry[]> {
   const { data, error } = await supabase.rpc('get_my_timeline')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function fetchRoadSegments(): Promise<RoadSegment[]> {
+  const { data, error } = await supabase.from('chapter_map_segments').select('*')
   if (error) throw error
   return data ?? []
 }

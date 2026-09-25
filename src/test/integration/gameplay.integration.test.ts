@@ -383,5 +383,51 @@ describe.skipIf(!isLocalSupabaseUp)(
         '00000000-0000-0000-0000-000000000202',
       ])
     })
+    it('mapa kapitol: polohy a cestu nastavuje iba admin, hráčka ich iba číta', async () => {
+      const { error: posError } = await admin
+        .from('chapters')
+        .update({ map_x: 120, map_y: 90 })
+        .eq('id', CHAPTER_INTRO)
+      expect(posError).toBeNull()
+      const { data: seg, error: segError } = await admin
+        .from('chapter_map_segments')
+        .insert({
+          from_chapter_id: CHAPTER_INTRO,
+          to_chapter_id: CHAPTER_QUESTION,
+          curve: 0.5,
+        })
+        .select()
+        .single()
+      expect(segError).toBeNull()
+
+      const { data: timeline } = await player.rpc('get_my_timeline')
+      const intro = timeline?.find((row) => row.chapter_id === CHAPTER_INTRO)
+      expect(intro?.map_x).toBe(120)
+      expect(intro?.map_y).toBe(90)
+
+      const { data: segments } = await player
+        .from('chapter_map_segments')
+        .select('id, curve')
+      expect(segments).toEqual([{ id: seg!.id, curve: 0.5 }])
+
+      const { error: insertError } = await player
+        .from('chapter_map_segments')
+        .insert({ from_chapter_id: CHAPTER_QUESTION, to_chapter_id: CHAPTER_QR })
+      expect(insertError).not.toBeNull()
+
+      await player.from('chapter_map_segments').update({ curve: -1 }).eq('id', seg!.id)
+      const { data: unchanged } = await admin
+        .from('chapter_map_segments')
+        .select('curve')
+        .eq('id', seg!.id)
+        .single()
+      expect(unchanged?.curve).toBe(0.5)
+
+      await admin.from('chapter_map_segments').delete().eq('id', seg!.id)
+      await admin
+        .from('chapters')
+        .update({ map_x: null, map_y: null })
+        .eq('id', CHAPTER_INTRO)
+    })
   },
 )

@@ -19,6 +19,11 @@ const ChapterEditorPage = lazy(() =>
     default: m.ChapterEditorPage,
   })),
 )
+const RoadMapEditorPage = lazy(() =>
+  import('../pages/admin/RoadMapEditorPage').then((m) => ({
+    default: m.RoadMapEditorPage,
+  })),
+)
 const PlayersPage = lazy(() =>
   import('../pages/admin/PlayersPage').then((m) => ({ default: m.PlayersPage })),
 )
@@ -62,6 +67,7 @@ export const router = createBrowserRouter([
   },
   { path: '/admin', element: adminRoute(<AdminPage />) },
   { path: '/admin/players', element: adminRoute(<PlayersPage />) },
+  { path: '/admin/mapa', element: adminRoute(<RoadMapEditorPage />) },
   { path: '/admin/chapters/new', element: adminRoute(<ChapterEditorPage />) },
   { path: '/admin/chapters/:id', element: adminRoute(<ChapterEditorPage />) },
   { path: '*', element: <NotFoundPage /> },

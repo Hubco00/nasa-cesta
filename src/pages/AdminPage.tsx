@@ -57,6 +57,9 @@ export function AdminPage() {
       <div className="mb-4 flex items-center justify-between">
         <h1 className="font-[family-name:var(--font-display)] text-xl">Kapitoly</h1>
         <div className="flex gap-3 text-sm">
+          <Link to="/admin/mapa" className="text-[var(--color-accent)] underline">
+            Mapa kapitol
+          </Link>
           <Link to="/admin/players" className="text-[var(--color-accent)] underline">
             Hráčky
           </Link>

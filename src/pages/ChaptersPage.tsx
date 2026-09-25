@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react'
 import { Layout } from '../components/Layout'
 import { ChapterMapPath } from '../features/chapters/ChapterMapPath'
-import { fetchTimeline } from '../features/chapters/api'
-import type { TimelineEntry } from '../features/chapters/types'
+import { fetchRoadSegments, fetchTimeline } from '../features/chapters/api'
+import type { RoadSegment, TimelineEntry } from '../features/chapters/types'
 
 export function ChaptersPage() {
   const [entries, setEntries] = useState<TimelineEntry[]>([])
+  const [segments, setSegments] = useState<RoadSegment[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
-    fetchTimeline().then((data) => {
+    Promise.all([fetchTimeline(), fetchRoadSegments()]).then(([data, roads]) => {
       if (active) {
         setEntries(data)
+        setSegments(roads)
         setLoading(false)
       }
     })
@@ -37,7 +39,7 @@ export function ChaptersPage() {
         </p>
       )}
 
-      {!loading && <ChapterMapPath entries={entries} />}
+      {!loading && <ChapterMapPath entries={entries} segments={segments} />}
     </Layout>
   )
 }

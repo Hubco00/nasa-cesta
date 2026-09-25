@@ -176,6 +176,11 @@ insertom do `auth.users` — iba cez Supabase Auth:
    → rozbaľ ho a pridávaj príbehy/fotky/otázky rovnako ako vyššie. Hráčke sa
    zobrazia po ťuknutí na guličku pri meste na mape kapitoly.
 5. Keď je kapitola hotová, prepni ju na **Publikované**.
+6. **Mapa kapitol** (odkaz v admin paneli) — úvodná cesta, ktorú hráčka vidí po
+   prihlásení: kapitoly posúvaš ťahaním, cestu kreslíš ťuknutím na kapitolu a
+   potom na ďalšiu (pokračuje sa od poslednej), ťuknutím na čiaru nastavíš
+   **oblúk** alebo úsek zmažeš. Kým cestu nenakreslíš, ide automaticky podľa
+   poradia kapitol.
 
 ## Štruktúra projektu
 

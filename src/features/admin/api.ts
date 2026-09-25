@@ -320,3 +320,69 @@ export async function adminResetProgress(playerId: string): Promise<void> {
   const { error } = await supabase.rpc('admin_reset_progress', { p_player_id: playerId })
   if (error) throw error
 }
+
+// --- Mapa kapitol (cesta) -------------------------------------------------
+
+export type RoadSegmentRow = Database['public']['Tables']['chapter_map_segments']['Row']
+
+export async function adminListSegments(): Promise<RoadSegmentRow[]> {
+  const { data, error } = await supabase
+    .from('chapter_map_segments')
+    .select('*')
+    .order('created_at')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function adminCreateSegments(
+  pairs: { from: string; to: string }[],
+): Promise<RoadSegmentRow[]> {
+  if (pairs.length === 0) return []
+  const { data, error } = await supabase
+    .from('chapter_map_segments')
+    .insert(pairs.map((p) => ({ from_chapter_id: p.from, to_chapter_id: p.to })))
+    .select()
+  if (error) throw error
+  return data ?? []
+}
+
+export async function adminUpdateSegmentCurve(id: string, curve: number): Promise<void> {
+  const { error } = await supabase
+    .from('chapter_map_segments')
+    .update({ curve })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function adminDeleteSegment(id: string): Promise<void> {
+  const { error } = await supabase.from('chapter_map_segments').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function adminDeleteAllSegments(): Promise<void> {
+  const { error } = await supabase
+    .from('chapter_map_segments')
+    .delete()
+    .not('id', 'is', null)
+  if (error) throw error
+}
+
+export async function adminSetChapterPositions(
+  positions: { id: string; x: number; y: number }[],
+): Promise<void> {
+  for (const p of positions) {
+    const { error } = await supabase
+      .from('chapters')
+      .update({ map_x: Math.round(p.x), map_y: Math.round(p.y) })
+      .eq('id', p.id)
+    if (error) throw error
+  }
+}
+
+export async function adminResetChapterPositions(): Promise<void> {
+  const { error } = await supabase
+    .from('chapters')
+    .update({ map_x: null, map_y: null })
+    .not('id', 'is', null)
+  if (error) throw error
+}

@@ -217,6 +217,59 @@ export type Database = {
           },
         ]
       }
+      chapter_map_segments: {
+        Row: {
+          created_at: string
+          curve: number
+          from_chapter_id: string
+          id: string
+          to_chapter_id: string
+        }
+        Insert: {
+          created_at?: string
+          curve?: number
+          from_chapter_id: string
+          id?: string
+          to_chapter_id: string
+        }
+        Update: {
+          created_at?: string
+          curve?: number
+          from_chapter_id?: string
+          id?: string
+          to_chapter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'chapter_map_segments_from_chapter_id_fkey'
+            columns: ['from_chapter_id']
+            isOneToOne: false
+            referencedRelation: 'chapters'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'chapter_map_segments_from_chapter_id_fkey'
+            columns: ['from_chapter_id']
+            isOneToOne: false
+            referencedRelation: 'chapters_player_view'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'chapter_map_segments_to_chapter_id_fkey'
+            columns: ['to_chapter_id']
+            isOneToOne: false
+            referencedRelation: 'chapters'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'chapter_map_segments_to_chapter_id_fkey'
+            columns: ['to_chapter_id']
+            isOneToOne: false
+            referencedRelation: 'chapters_player_view'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       chapter_unlock_conditions: {
         Row: {
           allowed_radius_meters: number | null
@@ -296,6 +349,8 @@ export type Database = {
           is_published: boolean
           latitude: number | null
           longitude: number | null
+          map_x: number | null
+          map_y: number | null
           order_index: number
           qr_token_hash: string | null
           question_config: Json | null
@@ -318,6 +373,8 @@ export type Database = {
           is_published?: boolean
           latitude?: number | null
           longitude?: number | null
+          map_x?: number | null
+          map_y?: number | null
           order_index?: number
           qr_token_hash?: string | null
           question_config?: Json | null
@@ -340,6 +397,8 @@ export type Database = {
           is_published?: boolean
           latitude?: number | null
           longitude?: number | null
+          map_x?: number | null
+          map_y?: number | null
           order_index?: number
           qr_token_hash?: string | null
           question_config?: Json | null
@@ -780,6 +839,8 @@ export type Database = {
           chapter_id: string
           description: string
           is_final: boolean
+          map_x: number
+          map_y: number
           order_index: number
           slug: string
           status: string
