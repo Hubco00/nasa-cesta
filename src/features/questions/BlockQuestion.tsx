@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { renderMarkdownSafe } from '../../lib/security'
-import { PhotoFigure } from '../chapters/PhotoFigure'
+import { LetterPhotos } from '../chapters/PhotoFigure'
 import {
   fetchBlockSolved,
   fetchQuestionOutcome,
@@ -143,24 +143,24 @@ export function BlockQuestion({ block }: { block: ChapterBlock }) {
 
 function OutcomeLetter({ letter, correct }: { letter: ChapterBlock; correct: boolean }) {
   return (
-    <div className="animate-unlock flex flex-col gap-3">
+    <div className="animate-unlock paper rounded-lg p-5">
+      <p
+        className={`mb-2 font-[family-name:var(--font-display)] text-xs tracking-wider ${
+          correct ? 'text-[var(--color-accent)]' : 'opacity-70'
+        }`}
+      >
+        {correct ? '✓ Správne' : 'Nie celkom…'}
+      </p>
       {letter.body_markdown?.trim() && (
-        <div className="paper rounded-lg p-5">
-          <p
-            className={`mb-2 font-[family-name:var(--font-display)] text-xs tracking-wider ${
-              correct ? 'text-[var(--color-accent)]' : 'opacity-70'
-            }`}
-          >
-            {correct ? '✓ Správne' : 'Nie celkom…'}
-          </p>
-          <div
-            className="prose-romantic"
-            dangerouslySetInnerHTML={{ __html: renderMarkdownSafe(letter.body_markdown) }}
-          />
-        </div>
+        <div
+          className="prose-romantic"
+          dangerouslySetInnerHTML={{ __html: renderMarkdownSafe(letter.body_markdown) }}
+        />
       )}
       {letter.storage_path && (
-        <PhotoFigure storagePath={letter.storage_path} caption={letter.caption} />
+        <LetterPhotos
+          photos={[{ storagePath: letter.storage_path, caption: letter.caption }]}
+        />
       )}
     </div>
   )
