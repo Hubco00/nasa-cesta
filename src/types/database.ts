@@ -98,6 +98,32 @@ export type Database = {
           },
         ]
       }
+      chapter_block_qr_tokens: {
+        Row: {
+          block_id: string
+          created_at: string
+          token_hash: string
+        }
+        Insert: {
+          block_id: string
+          created_at?: string
+          token_hash: string
+        }
+        Update: {
+          block_id?: string
+          created_at?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'chapter_block_qr_tokens_block_id_fkey'
+            columns: ['block_id']
+            isOneToOne: true
+            referencedRelation: 'chapter_blocks'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       chapter_blocks: {
         Row: {
           alt_text: string | null
@@ -596,6 +622,7 @@ export type Database = {
       }
       qr_events: {
         Row: {
+          block_id: string | null
           chapter_id: string | null
           condition_id: string | null
           created_at: string
@@ -603,6 +630,7 @@ export type Database = {
           player_id: string
         }
         Insert: {
+          block_id?: string | null
           chapter_id?: string | null
           condition_id?: string | null
           created_at?: string
@@ -610,6 +638,7 @@ export type Database = {
           player_id: string
         }
         Update: {
+          block_id?: string | null
           chapter_id?: string | null
           condition_id?: string | null
           created_at?: string
@@ -617,6 +646,13 @@ export type Database = {
           player_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'qr_events_block_id_fkey'
+            columns: ['block_id']
+            isOneToOne: false
+            referencedRelation: 'chapter_blocks'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'qr_events_chapter_id_fkey'
             columns: ['chapter_id']
@@ -788,6 +824,10 @@ export type Database = {
         Args: { p_player_id: string }
         Returns: undefined
       }
+      admin_set_block_qr_token: {
+        Args: { p_block_id: string; p_token: string }
+        Returns: undefined
+      }
       admin_set_chapter_status: {
         Args: { p_chapter_id: string; p_player_id: string; p_status: string }
         Returns: undefined
@@ -887,6 +927,10 @@ export type Database = {
       }
       verify_block_answer: {
         Args: { p_answer: string; p_block_id: string }
+        Returns: Json
+      }
+      verify_block_qr: {
+        Args: { p_block_id: string; p_token: string }
         Returns: Json
       }
       verify_location: {

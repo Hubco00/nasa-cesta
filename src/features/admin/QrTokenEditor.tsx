@@ -1,12 +1,7 @@
-import QRCode from 'qrcode'
 import { useState } from 'react'
+import { qrCodeDataUrl, randomQrToken } from '../../lib/qrCode'
 import { adminSetQrToken } from './api'
-
-function randomToken(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(8))
-  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
-  return `quest_${hex}`
-}
+import { QrCodePreview } from './QrCodePreview'
 
 export function QrTokenEditor({
   chapterId,
@@ -21,10 +16,10 @@ export function QrTokenEditor({
   const [saving, setSaving] = useState(false)
 
   async function generate() {
-    const next = randomToken()
+    const next = randomQrToken()
     setToken(next)
     setSaved(false)
-    setQrDataUrl(await QRCode.toDataURL(next, { margin: 2, width: 320 }))
+    setQrDataUrl(await qrCodeDataUrl(next))
   }
 
   async function save() {
@@ -64,18 +59,7 @@ export function QrTokenEditor({
         )}
       </div>
 
-      {qrDataUrl && (
-        <div className="flex flex-col items-center gap-2">
-          <img src={qrDataUrl} alt="QR kód" className="h-40 w-40" />
-          <a
-            href={qrDataUrl}
-            download={`qr-${token}.png`}
-            className="text-sm text-[var(--color-accent)] underline"
-          >
-            Stiahnuť QR kód
-          </a>
-        </div>
-      )}
+      {qrDataUrl && <QrCodePreview dataUrl={qrDataUrl} fileName={`qr-${token}.png`} />}
     </div>
   )
 }

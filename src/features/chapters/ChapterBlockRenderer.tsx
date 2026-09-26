@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { renderMarkdownSafe } from '../../lib/security'
+import { BlockQr } from '../qr-scanner/BlockQr'
 import { BlockQuestion } from '../questions/BlockQuestion'
 import { LetterPhotos, PhotoFigure } from './PhotoFigure'
 import type { ChapterBlock } from './types'
@@ -24,23 +25,28 @@ function buildTree(blocks: ChapterBlock[]): BlockNode[] {
   return roots
 }
 
+type Reveal = (blocks: ChapterBlock[]) => void
+
 function BlockNodeView({
   node,
   depth,
   index,
+  onReveal,
 }: {
   node: BlockNode
   depth: number
   index: number
+  onReveal: Reveal
 }) {
   // Fotky pripojené k príbehu sa kreslia priamo do jeho listu; ostatné
-  // vnorené bloky (a deti otázky, ktoré rieši BlockQuestion) zostávajú zvlášť.
+  // vnorené bloky zostávajú zvlášť. Deti otázky rieši BlockQuestion, obsah
+  // pod QR kódom BlockQr.
   const letterPhotos =
     node.block_type === 'text'
       ? node.children.filter((c) => c.block_type === 'photo' && c.storage_path)
       : []
   const nestedChildren =
-    node.block_type === 'question'
+    node.block_type === 'question' || node.block_type === 'qr'
       ? []
       : node.children.filter((c) => !letterPhotos.includes(c))
 
@@ -88,10 +94,30 @@ function BlockNodeView({
 
       {node.block_type === 'question' && <BlockQuestion block={node} />}
 
+      {node.block_type === 'qr' && (
+        <BlockQr block={node} hasContent={node.children.length > 0} onRevealed={onReveal}>
+          {node.children.map((child, i) => (
+            <BlockNodeView
+              key={child.id}
+              node={child}
+              depth={depth}
+              index={i}
+              onReveal={onReveal}
+            />
+          ))}
+        </BlockQr>
+      )}
+
       {nestedChildren.length > 0 && (
         <div className="mt-3 flex flex-col gap-3 border-l-2 border-rose-200/50 pl-3">
           {nestedChildren.map((child, i) => (
-            <BlockNodeView key={child.id} node={child} depth={depth + 1} index={i} />
+            <BlockNodeView
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              index={i}
+              onReveal={onReveal}
+            />
           ))}
         </div>
       )}
@@ -100,14 +126,27 @@ function BlockNodeView({
 }
 
 export function ChapterBlockRenderer({ blocks }: { blocks: ChapterBlock[] }) {
-  const tree = useMemo(() => buildTree(blocks), [blocks])
+  // Obsah, ktorý server vydal až po naskenovaní QR kódu.
+  const [revealed, setRevealed] = useState<ChapterBlock[]>([])
+  const reveal = useCallback<Reveal>(
+    (more) => setRevealed((prev) => [...prev, ...more]),
+    [],
+  )
+
+  const tree = useMemo(() => {
+    const known = new Set(blocks.map((b) => b.id))
+    const extra = revealed
+      .filter((b) => !known.has(b.id))
+      .sort((a, b) => a.order_index - b.order_index)
+    return buildTree([...blocks, ...extra])
+  }, [blocks, revealed])
 
   if (blocks.length === 0) return null
 
   return (
     <div className="flex flex-col gap-4">
       {tree.map((node, i) => (
-        <BlockNodeView key={node.id} node={node} depth={0} index={i} />
+        <BlockNodeView key={node.id} node={node} depth={0} index={i} onReveal={reveal} />
       ))}
     </div>
   )

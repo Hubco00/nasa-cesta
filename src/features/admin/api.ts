@@ -150,6 +150,29 @@ export async function adminSetQrToken(
  * Bloky jedného "priestoru" kapitoly: bez `mapPinId` hlavný list kapitoly,
  * s `mapPinId` obsah konkrétneho miesta na mape.
  */
+/** Uloží (iba hash) nový token QR bloku — starý QR kód tým prestane platiť. */
+export async function adminSetBlockQrToken(
+  blockId: string,
+  token: string,
+): Promise<void> {
+  const { error } = await supabase.rpc('admin_set_block_qr_token', {
+    p_block_id: blockId,
+    p_token: token,
+  })
+  if (error) throw error
+}
+
+/** Ktoré z daných QR blokov už majú nastavený QR kód. */
+export async function adminListBlockQrTokens(blockIds: string[]): Promise<Set<string>> {
+  if (blockIds.length === 0) return new Set()
+  const { data, error } = await supabase
+    .from('chapter_block_qr_tokens')
+    .select('block_id')
+    .in('block_id', blockIds)
+  if (error) throw error
+  return new Set((data ?? []).map((row) => row.block_id))
+}
+
 export async function adminListBlocks(
   chapterId: string,
   mapPinId: string | null = null,

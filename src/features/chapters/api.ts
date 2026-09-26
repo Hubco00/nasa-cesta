@@ -198,6 +198,48 @@ export async function fetchBlockSolved(blockId: string): Promise<boolean> {
   return Boolean(data?.solved_at)
 }
 
+/** Naskenovaný token QR bloku — overí ho server a zapamätá si, že ho hráčka našla. */
+export async function verifyBlockQr(blockId: string, token: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('verify_block_qr', {
+    p_block_id: blockId,
+    p_token: token,
+  })
+  if (error) throw error
+  return Boolean((data as { valid?: boolean } | null)?.valid)
+}
+
+/**
+ * Všetko pod blokom (aj fotky príbehu pod ním). Server vráti iba to, čo už
+ * hráčka smie vidieť — obsah pod QR kódom až po naskenovaní.
+ */
+export async function fetchBlockDescendants(
+  block: ChapterBlock,
+): Promise<ChapterBlock[]> {
+  let query = supabase
+    .from('chapter_blocks')
+    .select('*')
+    .eq('chapter_id', block.chapter_id)
+  query = block.map_pin_id
+    ? query.eq('map_pin_id', block.map_pin_id)
+    : query.is('map_pin_id', null)
+  const { data, error } = await query.order('order_index', { ascending: true })
+  if (error) throw error
+
+  const rows = data ?? []
+  const inside = new Set([block.id])
+  let grew = true
+  while (grew) {
+    grew = false
+    for (const row of rows) {
+      if (row.parent_block_id && inside.has(row.parent_block_id) && !inside.has(row.id)) {
+        inside.add(row.id)
+        grew = true
+      }
+    }
+  }
+  return rows.filter((row) => row.id !== block.id && inside.has(row.id))
+}
+
 export async function completeManualStep(chapterId: string): Promise<void> {
   const { error } = await supabase.rpc('complete_manual_step', {
     p_chapter_id: chapterId,

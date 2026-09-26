@@ -29,6 +29,7 @@ function draftFrom(block?: ChapterBlockRow): OutcomeDraft {
 export function QuestionEditorForm({
   chapterId,
   mapPinId,
+  parentBlockId = null,
   question,
   outcomes,
   photoUrls,
@@ -38,6 +39,8 @@ export function QuestionEditorForm({
 }: {
   chapterId: string
   mapPinId: string | null
+  /** Pod QR kódom — ukáže sa až po jeho naskenovaní. */
+  parentBlockId?: string | null
   question?: ChapterBlockRow
   /** Existujúce listy po odpovedi (deti otázky s reveal_on). */
   outcomes: ChapterBlockRow[]
@@ -178,6 +181,7 @@ export function QuestionEditorForm({
         const created = await adminCreateBlock({
           chapter_id: chapterId,
           map_pin_id: mapPinId,
+          parent_block_id: parentBlockId,
           block_type: 'question',
           order_index: nextOrderIndex,
           body_markdown: prompt,

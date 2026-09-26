@@ -7,6 +7,7 @@ import { Field, FormActions, inputClass } from './ui'
 export function PhotoForm({
   chapterId,
   mapPinId,
+  parentBlockId = null,
   photo,
   currentUrl,
   nextOrderIndex,
@@ -15,6 +16,8 @@ export function PhotoForm({
 }: {
   chapterId: string
   mapPinId: string | null
+  /** Pod QR kódom — ukáže sa až po jeho naskenovaní. */
+  parentBlockId?: string | null
   photo?: ChapterBlockRow
   currentUrl?: string
   nextOrderIndex: number
@@ -63,6 +66,7 @@ export function PhotoForm({
         await adminCreateBlock({
           chapter_id: chapterId,
           map_pin_id: mapPinId,
+          parent_block_id: parentBlockId,
           block_type: 'photo',
           order_index: nextOrderIndex,
           storage_path: path,

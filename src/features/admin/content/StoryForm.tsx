@@ -24,6 +24,7 @@ interface NewPhoto {
 export function StoryForm({
   chapterId,
   mapPinId,
+  parentBlockId = null,
   story,
   photos,
   photoUrls,
@@ -33,6 +34,8 @@ export function StoryForm({
 }: {
   chapterId: string
   mapPinId: string | null
+  /** Pod QR kódom — ukáže sa až po jeho naskenovaní. */
+  parentBlockId?: string | null
   story?: ChapterBlockRow
   photos: ChapterBlockRow[]
   photoUrls: Record<string, string>
@@ -91,6 +94,7 @@ export function StoryForm({
         const created = await adminCreateBlock({
           chapter_id: chapterId,
           map_pin_id: mapPinId,
+          parent_block_id: parentBlockId,
           block_type: 'text',
           order_index: nextOrderIndex,
           title: title.trim() || null,

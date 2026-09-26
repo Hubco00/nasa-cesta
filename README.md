@@ -35,18 +35,18 @@ na Supabase konfiguráciu je nižšie.
 
 ### Dostupné skripty
 
-| Príkaz                     | Popis                                                          |
-| -------------------------- | -------------------------------------------------------------- |
-| `npm run dev`              | vývojový server s HMR                                          |
-| `npm run build`            | typecheck + produkčný build do `dist/`                         |
-| `npm run preview`          | lokálny náhľad produkčného buildu                              |
-| `npm run typecheck`        | TypeScript kontrola bez buildu                                 |
-| `npm run lint`             | ESLint                                                         |
-| `npm run format`           | Prettier — automatická oprava                                  |
-| `npm run format:check`     | Prettier — iba kontrola                                        |
-| `npm run test`             | Vitest — unit testy (jednorazovo)                              |
-| `npm run test:watch`       | Vitest vo watch režime                                         |
-| `npm run test:integration` | Testy proti lokálnemu Supabase (vyžaduje `npx supabase start`) |
+| Príkaz                     | Popis                                                                                                 |
+| -------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `npm run dev`              | vývojový server s HMR                                                                                 |
+| `npm run build`            | typecheck + produkčný build do `dist/`                                                                |
+| `npm run preview`          | lokálny náhľad produkčného buildu                                                                     |
+| `npm run typecheck`        | TypeScript kontrola bez buildu                                                                        |
+| `npm run lint`             | ESLint                                                                                                |
+| `npm run format`           | Prettier — automatická oprava                                                                         |
+| `npm run format:check`     | Prettier — iba kontrola                                                                               |
+| `npm run test`             | Vitest — unit testy (jednorazovo)                                                                     |
+| `npm run test:watch`       | Vitest vo watch režime                                                                                |
+| `npm run test:integration` | Testy proti lokálnemu Supabase (vyžaduje `npx supabase start`; iná inštancia cez `SUPABASE_TEST_URL`) |
 
 ## Supabase konfigurácia
 
@@ -171,9 +171,15 @@ insertom do `auth.users` — iba cez Supabase Auth:
      správna odpoveď, nápoveda, a **list po správnej** aj **po nesprávnej**
      odpovedi — každý s voliteľnou fotkou ako odmenou. Listy a fotky sa
      hráčke vydajú až po odpovedi (server), takže vopred neprezradia odpoveď.
+   - **+ QR kód** — názov a voliteľná nápoveda, kde ho hľadať. Po vytvorení sa
+     zobrazí QR kód na **stiahnutie/vytlačenie — ulož si ho hneď**, server
+     ukladá iba hash tokenu, takže neskôr sa obrázok znova zobraziť nedá
+     (v **Upraviť** vieš vygenerovať nový; starý tým prestane platiť). Do
+     karty QR kódu potom pridávaš **príbehy, fotky a otázky**, ktoré hráčka
+     uvidí až po naskenovaní — server jej ich dovtedy vôbec nepošle.
      Každú kartu vieš **Upraviť**, **Zmazať** a šípkami presunúť v poradí.
 4. V sekcii **Mapa — miesta v tejto kapitole** vyber mesto → **+ Pridať miesto**
-   → rozbaľ ho a pridávaj príbehy/fotky/otázky rovnako ako vyššie. Hráčke sa
+   → rozbaľ ho a pridávaj príbehy/fotky/otázky/QR kódy rovnako ako vyššie. Hráčke sa
    zobrazia po ťuknutí na guličku pri meste na mape kapitoly.
 5. Keď je kapitola hotová, prepni ju na **Publikované**.
    V **Nastaveniach kapitoly → Kedy sa kapitola odomkne** nastavíš, či sa
