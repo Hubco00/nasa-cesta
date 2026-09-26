@@ -73,6 +73,19 @@ body {
   font-family: var(--font-body);
 }
 
+/* Rozbalený zoznam <select> kreslí prehliadač sám — bez explicitných farieb
+   mal v tmavom režime biele pozadie so zdedeným svetlým textom (neviditeľné). */
+@layer base {
+  select {
+    color: var(--color-text);
+  }
+  select option,
+  select optgroup {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
+}
+
 /* Papierusový/parchment povrch — pre "listy" (texty kapitol) a iné písané karty */
 .paper {
   position: relative;
