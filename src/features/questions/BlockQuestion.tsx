@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { renderMarkdownSafe } from '../../lib/security'
 import { LetterPhotos } from '../chapters/PhotoFigure'
@@ -6,21 +6,31 @@ import {
   fetchBlockSolved,
   fetchQuestionOutcome,
   verifyBlockAnswer,
+  verifyBlockPlace,
+  type BlockAnswerResult,
   type QuestionResult,
 } from '../chapters/api'
 import type { BlockQuestionConfig, ChapterBlock } from '../chapters/types'
+import { formatDistance, type LatLng } from '../places/types'
+
+// Leaflet sa načíta až keď hráčka otvorí mapu.
+const PlacePickerOverlay = lazy(() => import('../places/PlacePickerOverlay'))
 
 type State = 'loading' | 'open' | 'wrong' | 'solved'
 
 export function BlockQuestion({ block }: { block: ChapterBlock }) {
   const config = (block.question_config ?? {}) as BlockQuestionConfig
   const options = config.type === 'choice' ? (config.options ?? []) : []
+  const isPlace = config.type === 'place'
   const [state, setState] = useState<State>('loading')
   const [outcome, setOutcome] = useState<ChapterBlock | null>(null)
   const [answer, setAnswer] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(false)
   const [unlocked, setUnlocked] = useState<{ title: string; slug: string }[]>([])
+  const [mapOpen, setMapOpen] = useState(false)
+  const [picked, setPicked] = useState<LatLng | null>(null)
+  const [distance, setDistance] = useState<number | null>(null)
 
   async function showOutcome(result: QuestionResult) {
     setOutcome(await fetchQuestionOutcome(block.id, result).catch(() => null))
@@ -45,21 +55,37 @@ export function BlockQuestion({ block }: { block: ChapterBlock }) {
     }
   }, [block.id])
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-    if (!answer.trim()) return
+  async function submit(verify: () => Promise<BlockAnswerResult>): Promise<boolean> {
     setSubmitting(true)
     setError(false)
     try {
-      const { correct, unlockedChapters } = await verifyBlockAnswer(block.id, answer)
+      const { correct, unlockedChapters } = await verify()
       await showOutcome(correct ? 'correct' : 'wrong')
       setUnlocked(unlockedChapters)
       setState(correct ? 'solved' : 'wrong')
+      return true
     } catch {
       setError(true)
+      return false
     } finally {
       setSubmitting(false)
     }
+  }
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    if (!answer.trim()) return
+    void submit(() => verifyBlockAnswer(block.id, answer))
+  }
+
+  async function submitPlace(place: LatLng) {
+    setPicked(place)
+    const answered = await submit(async () => {
+      const result = await verifyBlockPlace(block.id, place.lat, place.lng)
+      setDistance(result.distanceMeters)
+      return result
+    })
+    if (answered) setMapOpen(false)
   }
 
   return (
@@ -76,7 +102,76 @@ export function BlockQuestion({ block }: { block: ChapterBlock }) {
           </p>
         )}
 
-        {state !== 'solved' && (
+        {state !== 'solved' && isPlace && (
+          <div className="mt-4 flex flex-col gap-3">
+            {state === 'wrong' && (
+              <p className="text-sm text-rose-700">
+                {distance !== null
+                  ? `Vedľa — tvoje miesto je asi ${formatDistance(distance)} od správneho.`
+                  : 'To nie je ono, skús to znova.'}
+              </p>
+            )}
+            {state === 'wrong' && config.hint && (
+              <p className="text-sm italic opacity-80">Nápoveda: {config.hint}</p>
+            )}
+            {error && (
+              <p className="text-sm text-rose-700">
+                Odpoveď sa nepodarilo overiť, skús znova.
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => setMapOpen(true)}
+              disabled={state === 'loading'}
+              className="flex items-center justify-center gap-2 rounded-lg bg-[var(--color-accent)] px-4 py-2.5 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+            >
+              <span aria-hidden="true">📍</span>
+              {state === 'wrong' ? 'Skúsiť znova na mape' : 'Ukázať na mape'}
+            </button>
+          </div>
+        )}
+
+        {mapOpen && (
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg)] text-sm text-[var(--color-muted)]">
+                Načítavam mapu…
+              </div>
+            }
+          >
+            <PlacePickerOverlay
+              title={block.body_markdown ?? 'Otázka'}
+              backLabel="Otázka"
+              initial={picked}
+              onClose={() => setMapOpen(false)}
+              footer={(place) => (
+                <div className="flex flex-col gap-2">
+                  {error && (
+                    <p className="text-center text-sm text-rose-700">
+                      Odpoveď sa nepodarilo overiť — skontroluj pripojenie a skús znova.
+                    </p>
+                  )}
+                  {place ? (
+                    <button
+                      type="button"
+                      onClick={() => void submitPlace(place)}
+                      disabled={submitting}
+                      className="rounded-lg bg-[var(--color-accent)] px-4 py-3 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+                    >
+                      {submitting ? 'Overujem…' : 'Toto je to miesto'}
+                    </button>
+                  ) : (
+                    <p className="py-2 text-center text-sm text-[var(--color-muted)]">
+                      Nájdi miesto a ťukni naň na mape.
+                    </p>
+                  )}
+                </div>
+              )}
+            />
+          </Suspense>
+        )}
+
+        {state !== 'solved' && !isPlace && (
           <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
             {options.length > 0 ? (
               <div className="flex flex-col gap-2">

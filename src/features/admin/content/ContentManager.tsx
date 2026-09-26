@@ -336,7 +336,9 @@ function ItemCard({
               <p className="text-sm text-[var(--color-muted)]">
                 {config.type === 'choice'
                   ? `Možnosti: ${(config.options ?? []).join(' · ')}`
-                  : 'Napíše odpoveď'}
+                  : config.type === 'place'
+                    ? '📍 Ukáže miesto na mape'
+                    : 'Napíše odpoveď'}
               </p>
               {(['correct', 'wrong'] as const).map((result) => {
                 const letter = outcomeFor(result)

@@ -168,6 +168,31 @@ export async function verifyBlockAnswer(
   }
 }
 
+export interface BlockPlaceResult extends BlockAnswerResult {
+  /** Pri zlej odpovedi zaokrúhlená vzdialenosť od správneho miesta. */
+  distanceMeters: number | null
+}
+
+/** Otázka s odpoveďou miestom na mape — vzdialenosť vyhodnotí server. */
+export async function verifyBlockPlace(
+  blockId: string,
+  lat: number,
+  lng: number,
+): Promise<BlockPlaceResult> {
+  const { data, error } = await supabase.rpc('verify_block_place', {
+    p_block_id: blockId,
+    p_lat: lat,
+    p_lng: lng,
+  })
+  if (error) throw error
+  const result = (data ?? {}) as Partial<BlockPlaceResult>
+  return {
+    correct: Boolean(result.correct),
+    distanceMeters: result.distanceMeters ?? null,
+    unlockedChapters: result.unlockedChapters ?? [],
+  }
+}
+
 export type QuestionResult = 'correct' | 'wrong'
 
 /**

@@ -1,6 +1,3 @@
-// Automaticky vygenerované z lokálnej Supabase schémy:
-//   npx supabase gen types typescript --local > src/types/database.ts
-// Neupravovať ručne — po zmene migrácií spusti príkaz vyššie znova.
 export type Json =
   string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
@@ -40,6 +37,9 @@ export type Database = {
           correct_answers: string[]
           created_at: string
           id: string
+          latitude: number | null
+          longitude: number | null
+          radius_meters: number | null
           updated_at: string
         }
         Insert: {
@@ -49,6 +49,9 @@ export type Database = {
           correct_answers: string[]
           created_at?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
+          radius_meters?: number | null
           updated_at?: string
         }
         Update: {
@@ -58,6 +61,9 @@ export type Database = {
           correct_answers?: string[]
           created_at?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
+          radius_meters?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -927,6 +933,10 @@ export type Database = {
       }
       verify_block_answer: {
         Args: { p_answer: string; p_block_id: string }
+        Returns: Json
+      }
+      verify_block_place: {
+        Args: { p_block_id: string; p_lat: number; p_lng: number }
         Returns: Json
       }
       verify_block_qr: {

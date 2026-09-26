@@ -32,7 +32,8 @@ export interface QuestionConfig {
 
 /** chapter_blocks.question_config pre block_type = 'question'. */
 export interface BlockQuestionConfig {
-  type?: 'text' | 'choice'
+  /** 'place' — ťukne na miesto na mape, správne súradnice sú iba na serveri. */
+  type?: 'text' | 'choice' | 'place'
   options?: string[]
   hint?: string
 }

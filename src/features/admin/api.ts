@@ -108,26 +108,61 @@ export async function adminGetChapterAnswer(chapterId: string): Promise<string[]
   return data?.correct_answers ?? null
 }
 
-export async function adminGetBlockAnswer(blockId: string): Promise<string[] | null> {
+export interface BlockAnswer {
+  correctAnswers: string[]
+  /** Otázka s odpoveďou miestom na mape. */
+  place: { lat: number; lng: number; radiusMeters: number } | null
+}
+
+export async function adminGetBlockAnswer(blockId: string): Promise<BlockAnswer | null> {
   const { data, error } = await supabase
     .from('chapter_answers')
-    .select('correct_answers')
+    .select('correct_answers, latitude, longitude, radius_meters')
     .eq('block_id', blockId)
     .maybeSingle()
   if (error) throw error
-  return data?.correct_answers ?? null
+  if (!data) return null
+  return {
+    correctAnswers: data.correct_answers,
+    place:
+      data.latitude !== null && data.longitude !== null && data.radius_meters !== null
+        ? { lat: data.latitude, lng: data.longitude, radiusMeters: data.radius_meters }
+        : null,
+  }
 }
 
 export async function adminSetBlockAnswer(
   blockId: string,
   correctAnswers: string[],
 ): Promise<void> {
-  const { error } = await supabase
-    .from('chapter_answers')
-    .upsert(
-      { block_id: blockId, correct_answers: correctAnswers },
-      { onConflict: 'block_id' },
-    )
+  const { error } = await supabase.from('chapter_answers').upsert(
+    {
+      block_id: blockId,
+      correct_answers: correctAnswers,
+      latitude: null,
+      longitude: null,
+      radius_meters: null,
+    },
+    { onConflict: 'block_id' },
+  )
+  if (error) throw error
+}
+
+/** Správne miesto na mape + tolerancia v metroch. */
+export async function adminSetBlockPlaceAnswer(
+  blockId: string,
+  place: { lat: number; lng: number; radiusMeters: number },
+): Promise<void> {
+  const { error } = await supabase.from('chapter_answers').upsert(
+    {
+      block_id: blockId,
+      correct_answers: [],
+      latitude: place.lat,
+      longitude: place.lng,
+      radius_meters: place.radiusMeters,
+    },
+    { onConflict: 'block_id' },
+  )
   if (error) throw error
 }
 

@@ -171,6 +171,10 @@ insertom do `auth.users` — iba cez Supabase Auth:
      správna odpoveď, nápoveda, a **list po správnej** aj **po nesprávnej**
      odpovedi — každý s voliteľnou fotkou ako odmenou. Listy a fotky sa
      hráčke vydajú až po odpovedi (server), takže vopred neprezradia odpoveď.
+     Typ **Ukáže na mape** — vyberieš správne miesto na skutočnej mape
+     (OpenStreetMap, vyhľadávanie cez Nominatim) a toleranciu (25 m – 25 km);
+     hráčka ťukne na mapu a server overí vzdialenosť. Pri zlej odpovedi uvidí
+     iba zaokrúhlenú vzdialenosť, súradnice správneho miesta nikdy.
    - **+ QR kód** — názov a voliteľná nápoveda, kde ho hľadať. Po vytvorení sa
      zobrazí QR kód na **stiahnutie/vytlačenie — ulož si ho hneď**, server
      ukladá iba hash tokenu, takže neskôr sa obrázok znova zobraziť nedá
