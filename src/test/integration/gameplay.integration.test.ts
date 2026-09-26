@@ -228,7 +228,18 @@ describe.skipIf(!isLocalSupabaseUp)(
       expect(error?.message).toMatch(/admin/i)
     })
 
-    it('manuálna úvodná kapitola sa dá označiť ako splnená', async () => {
+    it('manuálna úvodná kapitola sa dá označiť ako splnená až po jej krokoch', async () => {
+      const early = await player.rpc('complete_manual_step', {
+        p_chapter_id: CHAPTER_INTRO,
+      })
+      expect(early.error?.message).toContain('kroky kapitoly')
+
+      // Úvodná kapitola má v seede jeden krok — príbeh 201 s tlačidlom „Ďalej“.
+      const step = await player.rpc('complete_block_step', {
+        p_block_id: '00000000-0000-0000-0000-000000000201',
+      })
+      expect(step.error).toBeNull()
+
       const { data, error } = await player.rpc('complete_manual_step', {
         p_chapter_id: CHAPTER_INTRO,
       })

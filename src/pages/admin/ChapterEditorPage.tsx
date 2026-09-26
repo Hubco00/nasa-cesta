@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Layout } from '../../components/Layout'
 import { ContentManager } from '../../features/admin/content/ContentManager'
+import { PlaceField } from '../../features/admin/content/PlaceField'
 import { ConditionsEditor } from '../../features/admin/ConditionsEditor'
 import { MapPinsEditor } from '../../features/admin/MapPinsEditor'
 import { QrTokenEditor } from '../../features/admin/QrTokenEditor'
@@ -236,7 +237,9 @@ export function ChapterEditorPage() {
               Obsah kapitoly
             </h2>
             <p className="mb-3 text-sm text-[var(--color-muted)]">
-              Toto si prečíta po otvorení kapitoly, v tomto poradí.
+              Hráčka prechádza obsah po krokoch v tomto poradí — ďalší krok uvidí, až keď
+              dokončí predchádzajúci (tlačidlo „Ďalej“, príchod na miesto, správna odpoveď
+              alebo naskenovaný QR kód).
             </p>
             <ContentManager chapterId={id} />
           </section>
@@ -409,33 +412,26 @@ export function ChapterEditorPage() {
 
           {unlockType === 'location' && (
             <div className="flex flex-col gap-2 rounded-xl border border-rose-200 p-3">
-              <div className="flex gap-2">
-                <label className="flex flex-1 flex-col gap-1 text-sm">
-                  Latitude
-                  <input
-                    value={latitude}
-                    onChange={(e) => setLatitude(e.target.value)}
-                    className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-                  />
-                </label>
-                <label className="flex flex-1 flex-col gap-1 text-sm">
-                  Longitude
-                  <input
-                    value={longitude}
-                    onChange={(e) => setLongitude(e.target.value)}
-                    className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-                  />
-                </label>
-              </div>
-              <label className="flex flex-col gap-1 text-sm">
-                Povolený rádius (m)
-                <input
-                  value={radius}
-                  onChange={(e) => setRadius(e.target.value)}
-                  type="number"
-                  className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-                />
-              </label>
+              <PlaceField
+                label="Kde sa kapitola dokončí"
+                value={
+                  latitude && longitude
+                    ? {
+                        lat: Number(latitude),
+                        lng: Number(longitude),
+                        radiusMeters: Number(radius) || 150,
+                      }
+                    : null
+                }
+                onChange={(place) => {
+                  setLatitude(String(place.lat))
+                  setLongitude(String(place.lng))
+                  setRadius(String(place.radiusMeters))
+                }}
+                radiusOptions={[50, 100, 150, 300, 500, 1000, 2000]}
+                defaultRadius={150}
+                help="Na konci kapitoly uvidí tlačidlo „Skontrolovať polohu“."
+              />
               <button
                 onClick={useCurrentLocation}
                 type="button"

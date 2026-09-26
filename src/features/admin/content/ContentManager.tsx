@@ -159,6 +159,7 @@ export function ContentManager({
           outcomes={childrenOf(item.id).filter((c) => c.reveal_on)}
           photoUrls={photoUrls}
           missingQr={item.block_type === 'qr' && !qrWithToken.has(item.id)}
+          stepNumber={!mapPinId && !parentBlockId ? index + 1 : undefined}
           isFirst={index === 0}
           isLast={index === items.length - 1}
           onEdit={() => setForm({ kind: KIND_OF[item.block_type], block: item })}
@@ -261,6 +262,7 @@ function ItemCard({
   outcomes,
   photoUrls,
   missingQr,
+  stepNumber,
   isFirst,
   isLast,
   onEdit,
@@ -273,6 +275,8 @@ function ItemCard({
   outcomes: ChapterBlockRow[]
   photoUrls: Record<string, string>
   missingQr: boolean
+  /** Poradie kroku v hlavnom liste kapitoly (hráčka ich prechádza po jednom). */
+  stepNumber?: number
   isFirst: boolean
   isLast: boolean
   onEdit: () => void
@@ -299,9 +303,19 @@ function ItemCard({
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <span className="mb-1 inline-flex items-center gap-1 rounded bg-[var(--color-accent)]/10 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-accent)]">
+            {stepNumber !== undefined && (
+              <span className="opacity-70">Krok {stepNumber} ·</span>
+            )}
             {kind === 'qr' && <QrIcon className="h-3 w-3" />}
             {KIND_LABEL[kind]}
           </span>
+          {stepNumber !== undefined &&
+            (kind === 'story' || kind === 'photo') &&
+            item.gate === 'location' && (
+              <p className="mb-1 text-sm font-medium text-[var(--color-accent)]">
+                📍 Ďalej až na mieste
+              </p>
+            )}
           {kind === 'qr' && (
             <>
               <p className="font-medium">{item.title || 'Bez názvu'}</p>

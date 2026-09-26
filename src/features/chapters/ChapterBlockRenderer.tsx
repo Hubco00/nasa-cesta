@@ -3,40 +3,24 @@ import { renderMarkdownSafe } from '../../lib/security'
 import { BlockQr } from '../qr-scanner/BlockQr'
 import { BlockQuestion } from '../questions/BlockQuestion'
 import { LetterPhotos, PhotoFigure } from './PhotoFigure'
+import { buildTree, type BlockNode } from './blockTree'
 import type { ChapterBlock } from './types'
 
-interface BlockNode extends ChapterBlock {
-  children: BlockNode[]
-}
+export type Reveal = (blocks: ChapterBlock[]) => void
 
-function buildTree(blocks: ChapterBlock[]): BlockNode[] {
-  const nodes = new Map<string, BlockNode>()
-  for (const block of blocks) nodes.set(block.id, { ...block, children: [] })
-
-  const roots: BlockNode[] = []
-  for (const block of blocks) {
-    const node = nodes.get(block.id)!
-    if (block.parent_block_id && nodes.has(block.parent_block_id)) {
-      nodes.get(block.parent_block_id)!.children.push(node)
-    } else {
-      roots.push(node)
-    }
-  }
-  return roots
-}
-
-type Reveal = (blocks: ChapterBlock[]) => void
-
-function BlockNodeView({
+export function BlockNodeView({
   node,
   depth,
   index,
   onReveal,
+  onSolved,
 }: {
   node: BlockNode
   depth: number
   index: number
   onReveal: Reveal
+  /** Iba pre krok kapitoly: otázka zodpovedaná / QR naskenovaný. */
+  onSolved?: () => void
 }) {
   // Fotky pripojené k príbehu sa kreslia priamo do jeho listu; ostatné
   // vnorené bloky zostávajú zvlášť. Deti otázky rieši BlockQuestion, obsah
@@ -92,10 +76,17 @@ function BlockNodeView({
         />
       )}
 
-      {node.block_type === 'question' && <BlockQuestion block={node} />}
+      {node.block_type === 'question' && (
+        <BlockQuestion block={node} onSolved={onSolved} />
+      )}
 
       {node.block_type === 'qr' && (
-        <BlockQr block={node} hasContent={node.children.length > 0} onRevealed={onReveal}>
+        <BlockQr
+          block={node}
+          hasContent={node.children.length > 0}
+          onRevealed={onReveal}
+          onSolved={onSolved}
+        >
           {node.children.map((child, i) => (
             <BlockNodeView
               key={child.id}

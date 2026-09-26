@@ -16,12 +16,15 @@ export function BlockQr({
   block,
   hasContent,
   onRevealed,
+  onSolved,
   children,
 }: {
   block: ChapterBlock
   /** Obsah pod QR kódom už prišiel (naskenovaný skôr, alebo pozerá admin). */
   hasContent: boolean
   onRevealed: (blocks: ChapterBlock[]) => void
+  /** Správny QR kód — v krokoch kapitoly tým hráčka môže pokračovať. */
+  onSolved?: () => void
   children: ReactNode
 }) {
   const [state, setState] = useState<State>(hasContent ? 'unlocked' : 'loading')
@@ -55,6 +58,7 @@ export function BlockQr({
       setScan(null)
       setJustFound(true)
       setState('unlocked')
+      onSolved?.()
     } catch {
       setScan('failed')
     }

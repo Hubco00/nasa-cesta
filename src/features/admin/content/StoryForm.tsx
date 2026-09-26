@@ -7,7 +7,9 @@ import {
   type ChapterBlockRow,
 } from '../api'
 import { getErrorMessage } from '../../../lib/errors'
+import { StepGateFields } from './StepGateFields'
 import { Field, FormActions, inputClass } from './ui'
+import { useStepGate } from './useStepGate'
 
 interface ExistingPhoto {
   block: ChapterBlockRow
@@ -51,6 +53,9 @@ export function StoryForm({
   const [added, setAdded] = useState<NewPhoto[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Pokračovanie (Ďalej / poloha) má zmysel iba pre krok hlavného listu kapitoly.
+  const isStep = !mapPinId && !parentBlockId
+  const gate = useStepGate(story)
 
   // Náhľady nových fotiek uvoľniť až pri zatvorení formulára.
   const addedRef = useRef(added)
@@ -81,6 +86,8 @@ export function StoryForm({
       setError('Napíš text príbehu.')
       return
     }
+    const gateError = isStep ? gate.validate() : null
+    if (gateError) return setError(gateError)
     setSaving(true)
     setError(null)
     try {
@@ -102,6 +109,7 @@ export function StoryForm({
         })
         storyId = created.id
       }
+      if (isStep) await gate.save(storyId)
 
       const removed = existing.filter((p) => p.remove)
       for (const p of removed) await adminDeleteBlock(p.block.id)
@@ -205,6 +213,8 @@ export function StoryForm({
           />
         </label>
       </div>
+
+      {isStep && <StepGateFields state={gate} />}
 
       {error && <p className="text-sm text-rose-600">{error}</p>}
 

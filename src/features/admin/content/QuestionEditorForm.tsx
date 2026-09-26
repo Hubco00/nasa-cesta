@@ -1,7 +1,6 @@
-import { lazy, Suspense, useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { removeChapterPhotos, uploadChapterPhoto } from '../../../lib/storage'
 import type { BlockQuestionConfig } from '../../chapters/types'
-import { formatDistance, type LatLng } from '../../places/types'
 import {
   adminCreateBlock,
   adminDeleteBlock,
@@ -12,10 +11,9 @@ import {
   type ChapterBlockRow,
 } from '../api'
 import { OutcomeFields, type OutcomeDraft } from './OutcomeFields'
+import { PlaceField, type PlaceValue } from './PlaceField'
 import { getErrorMessage } from '../../../lib/errors'
 import { Field, FormActions, inputClass } from './ui'
-
-const PlacePickerOverlay = lazy(() => import('../../places/PlacePickerOverlay'))
 
 type AnswerMode = 'text' | 'choice' | 'place'
 
@@ -58,9 +56,7 @@ export function QuestionEditorForm({
   const config = (question?.question_config ?? {}) as BlockQuestionConfig
   const [prompt, setPrompt] = useState(question?.body_markdown ?? '')
   const [mode, setMode] = useState<AnswerMode>(config.type ?? 'text')
-  const [place, setPlace] = useState<LatLng | null>(null)
-  const [radius, setRadius] = useState(250)
-  const [mapOpen, setMapOpen] = useState(false)
+  const [place, setPlace] = useState<PlaceValue | null>(null)
   const [textAnswers, setTextAnswers] = useState('')
   const [options, setOptions] = useState<string[]>(
     config.options && config.options.length > 0 ? config.options : ['', ''],
@@ -86,10 +82,7 @@ export function QuestionEditorForm({
         setTextAnswers(answers.join(', '))
         const idx = (config.options ?? []).findIndex((o) => answers.includes(o))
         setCorrectIndex(idx >= 0 ? idx : null)
-        if (answer.place) {
-          setPlace({ lat: answer.place.lat, lng: answer.place.lng })
-          setRadius(answer.place.radiusMeters)
-        }
+        if (answer.place) setPlace(answer.place)
       })
       .finally(() => {
         if (active) setLoadingAnswer(false)
@@ -204,7 +197,7 @@ export function QuestionEditorForm({
         id = created.id
       }
       if (mode === 'place') {
-        await adminSetBlockPlaceAnswer(id, { ...place!, radiusMeters: radius })
+        await adminSetBlockPlaceAnswer(id, place!)
       } else {
         await adminSetBlockAnswer(id, answers)
       }
@@ -256,82 +249,15 @@ export function QuestionEditorForm({
       </div>
 
       {mode === 'place' ? (
-        <div className="flex flex-col gap-2 text-sm">
-          <span className="font-medium">Správne miesto</span>
-          {loadingAnswer ? (
-            <p className="text-[var(--color-muted)]">Načítavam…</p>
-          ) : place ? (
-            <p className="rounded-lg border border-[var(--paper-border)] px-3 py-2">
-              <span aria-hidden="true">📍 </span>
-              {place.lat.toFixed(5)}, {place.lng.toFixed(5)}
-              <span className="text-[var(--color-muted)]">
-                {' '}
-                · tolerancia {formatDistance(radius)}
-              </span>
-            </p>
-          ) : (
-            <p className="text-[var(--color-muted)]">Zatiaľ nevybrané.</p>
-          )}
-          <button
-            type="button"
-            onClick={() => setMapOpen(true)}
-            disabled={loadingAnswer}
-            className="self-start rounded-lg border border-[var(--color-accent)] px-3 py-2 font-medium text-[var(--color-accent)] disabled:opacity-60"
-          >
-            {place ? 'Zmeniť na mape' : 'Vybrať na mape'}
-          </button>
-          <span className="text-xs text-[var(--color-muted)]">
-            Hráčka musí ťuknúť do tolerancie od tohto miesta. Pri zlej odpovedi uvidí,
-            približne ako ďaleko bola — súradnice správneho miesta nie.
-          </span>
-
-          {mapOpen && (
-            <Suspense
-              fallback={
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg)] text-sm text-[var(--color-muted)]">
-                  Načítavam mapu…
-                </div>
-              }
-            >
-              <PlacePickerOverlay
-                title="Správne miesto"
-                backLabel="Otázka"
-                initial={place}
-                radiusMeters={radius}
-                onClose={() => setMapOpen(false)}
-                footer={(picked) => (
-                  <div className="flex items-center gap-2">
-                    <label className="flex min-w-0 flex-1 flex-col text-xs text-[var(--color-muted)]">
-                      Tolerancia
-                      <select
-                        value={radius}
-                        onChange={(e) => setRadius(Number(e.target.value))}
-                        className="w-full min-w-0 rounded-lg border border-[var(--paper-border)] bg-transparent px-2 py-2 text-sm text-[var(--color-text)]"
-                      >
-                        {RADIUS_OPTIONS.map((r) => (
-                          <option key={r} value={r}>
-                            {formatDistance(r)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <button
-                      type="button"
-                      disabled={!picked}
-                      onClick={() => {
-                        setPlace(picked)
-                        setMapOpen(false)
-                      }}
-                      className="shrink-0 self-end rounded-lg bg-[var(--color-accent)] px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
-                    >
-                      {picked ? 'Použiť toto miesto' : 'Ťukni na mapu'}
-                    </button>
-                  </div>
-                )}
-              />
-            </Suspense>
-          )}
-        </div>
+        <PlaceField
+          label="Správne miesto"
+          value={place}
+          onChange={setPlace}
+          radiusOptions={RADIUS_OPTIONS}
+          defaultRadius={250}
+          loading={loadingAnswer}
+          help="Hráčka musí ťuknúť do tolerancie od tohto miesta. Pri zlej odpovedi uvidí, približne ako ďaleko bola — súradnice správneho miesta nie."
+        />
       ) : mode === 'text' ? (
         <Field
           label="Správna odpoveď"

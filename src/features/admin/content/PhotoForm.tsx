@@ -2,7 +2,9 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { removeChapterPhotos, uploadChapterPhoto } from '../../../lib/storage'
 import { adminCreateBlock, adminUpdateBlock, type ChapterBlockRow } from '../api'
 import { getErrorMessage } from '../../../lib/errors'
+import { StepGateFields } from './StepGateFields'
 import { Field, FormActions, inputClass } from './ui'
+import { useStepGate } from './useStepGate'
 
 export function PhotoForm({
   chapterId,
@@ -29,6 +31,9 @@ export function PhotoForm({
   const [caption, setCaption] = useState(photo?.caption ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Pokračovanie (Ďalej / poloha) má zmysel iba pre krok hlavného listu kapitoly.
+  const isStep = !mapPinId && !parentBlockId
+  const gate = useStepGate(photo)
 
   const previewRef = useRef<string | null>(null)
   useEffect(
@@ -51,6 +56,8 @@ export function PhotoForm({
       setError('Vyber fotku.')
       return
     }
+    const gateError = isStep ? gate.validate() : null
+    if (gateError) return setError(gateError)
     setSaving(true)
     setError(null)
     try {
@@ -61,9 +68,10 @@ export function PhotoForm({
         if (file) patch.storage_path = await uploadChapterPhoto(chapterId, file)
         await adminUpdateBlock(photo.id, patch)
         if (file && photo.storage_path) await removeChapterPhotos([photo.storage_path])
+        if (isStep) await gate.save(photo.id)
       } else {
         const path = await uploadChapterPhoto(chapterId, file!)
-        await adminCreateBlock({
+        const created = await adminCreateBlock({
           chapter_id: chapterId,
           map_pin_id: mapPinId,
           parent_block_id: parentBlockId,
@@ -72,6 +80,7 @@ export function PhotoForm({
           storage_path: path,
           caption: caption || null,
         })
+        if (isStep) await gate.save(created.id)
       }
       onSaved()
     } catch (err) {
@@ -107,6 +116,8 @@ export function PhotoForm({
           className={inputClass}
         />
       </Field>
+
+      {isStep && <StepGateFields state={gate} />}
 
       {error && <p className="text-sm text-rose-600">{error}</p>}
 

@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import { LoadError } from '../components/LoadError'
-import { ChapterActionPanel } from '../features/chapters/ChapterActionPanel'
-import { ChapterBlockRenderer } from '../features/chapters/ChapterBlockRenderer'
+import { ChapterSteps } from '../features/chapters/ChapterSteps'
 import {
   fetchChapterBlocks,
   fetchChapterBySlug,
@@ -121,25 +120,19 @@ export function ChapterDetailPage() {
           )}
         </header>
 
-        <ChapterBlockRenderer blocks={blocks} />
+        <ChapterSteps
+          chapter={chapter}
+          initialBlocks={blocks}
+          status={status}
+          onChapterCompleted={() => {
+            setStatus('completed')
+            if (!chapter.is_final) {
+              setTimeout(() => navigate('/chapters'), 1200)
+            }
+          }}
+        />
 
         <ChapterMap pins={pins} chapterTitle={chapter.title ?? ''} />
-
-        {status === 'completed' ? (
-          <p className="rounded-2xl bg-[var(--color-surface)] p-5 text-sm text-[var(--color-muted)] shadow-sm">
-            ✓ Táto kapitola je splnená.
-          </p>
-        ) : (
-          <ChapterActionPanel
-            chapter={chapter}
-            onCompleted={() => {
-              setStatus('completed')
-              if (!chapter.is_final) {
-                setTimeout(() => navigate('/chapters'), 1200)
-              }
-            }}
-          />
-        )}
       </div>
     </Layout>
   )

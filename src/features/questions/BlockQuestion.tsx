@@ -18,7 +18,14 @@ const PlacePickerOverlay = lazy(() => import('../places/PlacePickerOverlay'))
 
 type State = 'loading' | 'open' | 'wrong' | 'solved'
 
-export function BlockQuestion({ block }: { block: ChapterBlock }) {
+export function BlockQuestion({
+  block,
+  onSolved,
+}: {
+  block: ChapterBlock
+  /** Správna odpoveď — v krokoch kapitoly tým hráčka môže pokračovať. */
+  onSolved?: () => void
+}) {
   const config = (block.question_config ?? {}) as BlockQuestionConfig
   const options = config.type === 'choice' ? (config.options ?? []) : []
   const isPlace = config.type === 'place'
@@ -63,6 +70,7 @@ export function BlockQuestion({ block }: { block: ChapterBlock }) {
       await showOutcome(correct ? 'correct' : 'wrong')
       setUnlocked(unlockedChapters)
       setState(correct ? 'solved' : 'wrong')
+      if (correct) onSolved?.()
       return true
     } catch {
       setError(true)

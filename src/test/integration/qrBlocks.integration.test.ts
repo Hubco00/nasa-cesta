@@ -1,6 +1,6 @@
 /**
  * QR kód v obsahu kapitoly proti lokálnemu Supabase. Test si vytvorí vlastný
- * QR blok v úvodnej kapitole a na konci ho zmaže (aj s postupom hráčky k nemu)
+ * QR blok v dočasnej kapitole a na konci ho zmaže (aj s postupom hráčky k nemu)
  * — nemení ostatné dáta ani postup, dá sa preto spustiť aj nad rozpracovanou DB.
  */
 import { createClient } from '@supabase/supabase-js'
@@ -11,7 +11,6 @@ const SUPABASE_URL = process.env.SUPABASE_TEST_URL ?? 'http://127.0.0.1:54321'
 const ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
 
-const CHAPTER_INTRO = '00000000-0000-0000-0000-000000000101'
 const TOKEN = 'quest_integration_test_qr'
 
 const isLocalSupabaseUp = await fetch(`${SUPABASE_URL}/auth/v1/health`)
@@ -27,6 +26,7 @@ function makeClient() {
 describe.skipIf(!isLocalSupabaseUp)('QR kód v obsahu (lokálny Supabase)', () => {
   const player = makeClient()
   const admin = makeClient()
+  let chapterId = ''
   let qrId = ''
   let storyId = ''
   let photoId = ''
@@ -48,6 +48,21 @@ describe.skipIf(!isLocalSupabaseUp)('QR kód v obsahu (lokálny Supabase)', () =
     expect(playerAuth.error).toBeNull()
     expect(adminAuth.error).toBeNull()
 
+    // Vlastná dočasná kapitola — v existujúcej by bol blok až za jej krokmi.
+    const { data: chapter, error: chapterError } = await admin
+      .from('chapters')
+      .insert({
+        title: 'Test QR',
+        slug: `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        order_index: 99_000,
+        is_published: true,
+        unlock_type: 'manual',
+      })
+      .select()
+      .single()
+    expect(chapterError).toBeNull()
+    chapterId = chapter!.id
+
     const insert = async (
       row: Database['public']['Tables']['chapter_blocks']['Insert'],
     ) => {
@@ -60,21 +75,21 @@ describe.skipIf(!isLocalSupabaseUp)('QR kód v obsahu (lokálny Supabase)', () =
       return data!.id
     }
     qrId = await insert({
-      chapter_id: CHAPTER_INTRO,
+      chapter_id: chapterId,
       block_type: 'qr',
       order_index: 99_000,
       title: 'Test QR',
       body_markdown: 'Hľadaj pod lavičkou.',
     })
     storyId = await insert({
-      chapter_id: CHAPTER_INTRO,
+      chapter_id: chapterId,
       parent_block_id: qrId,
       block_type: 'text',
       order_index: 10,
       body_markdown: 'Tajný príbeh za QR kódom.',
     })
     photoId = await insert({
-      chapter_id: CHAPTER_INTRO,
+      chapter_id: chapterId,
       parent_block_id: storyId,
       block_type: 'photo',
       order_index: 10,
@@ -83,7 +98,7 @@ describe.skipIf(!isLocalSupabaseUp)('QR kód v obsahu (lokálny Supabase)', () =
   })
 
   afterAll(async () => {
-    if (qrId) await admin.from('chapter_blocks').delete().eq('id', qrId)
+    if (chapterId) await admin.rpc('admin_delete_chapter', { p_chapter_id: chapterId })
   })
 
   it('token nastaví iba admin a hráčka nevidí ani jeho hash', async () => {
@@ -115,7 +130,7 @@ describe.skipIf(!isLocalSupabaseUp)('QR kód v obsahu (lokálny Supabase)', () =
 
   it('QR kód nemôže byť vnorený pod iný blok', async () => {
     const { error } = await admin.from('chapter_blocks').insert({
-      chapter_id: CHAPTER_INTRO,
+      chapter_id: chapterId,
       parent_block_id: storyId,
       block_type: 'qr',
       order_index: 20,

@@ -1,6 +1,6 @@
 /**
  * Otázka s odpoveďou „miesto na mape“ proti lokálnemu Supabase. Test si
- * vytvorí vlastnú otázku v úvodnej kapitole a na konci ju zmaže (aj s
+ * vytvorí vlastnú otázku v dočasnej kapitole a na konci ju zmaže (aj s
  * odpoveďou a postupom hráčky) — dá sa spustiť aj nad rozpracovanou DB.
  */
 import { createClient } from '@supabase/supabase-js'
@@ -11,7 +11,6 @@ const SUPABASE_URL = process.env.SUPABASE_TEST_URL ?? 'http://127.0.0.1:54321'
 const ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
 
-const CHAPTER_INTRO = '00000000-0000-0000-0000-000000000101'
 // Železničná stanica Žilina.
 const TARGET = { lat: 49.22655, lng: 18.74478 }
 
@@ -28,6 +27,7 @@ function makeClient() {
 describe.skipIf(!isLocalSupabaseUp)('otázka — miesto na mape (lokálny Supabase)', () => {
   const player = makeClient()
   const admin = makeClient()
+  let chapterId = ''
   let questionId = ''
 
   beforeAll(async () => {
@@ -38,10 +38,25 @@ describe.skipIf(!isLocalSupabaseUp)('otázka — miesto na mape (lokálny Supaba
     expect(playerAuth.error).toBeNull()
     expect(adminAuth.error).toBeNull()
 
+    // Vlastná dočasná kapitola — v existujúcej by bol blok až za jej krokmi.
+    const { data: chapter, error: chapterError } = await admin
+      .from('chapters')
+      .insert({
+        title: 'Test miesta',
+        slug: `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        order_index: 99_000,
+        is_published: true,
+        unlock_type: 'manual',
+      })
+      .select()
+      .single()
+    expect(chapterError).toBeNull()
+    chapterId = chapter!.id
+
     const { data, error } = await admin
       .from('chapter_blocks')
       .insert({
-        chapter_id: CHAPTER_INTRO,
+        chapter_id: chapterId,
         block_type: 'question',
         order_index: 99_000,
         body_markdown: 'Kde sme sa prvýkrát videli?',
@@ -63,7 +78,7 @@ describe.skipIf(!isLocalSupabaseUp)('otázka — miesto na mape (lokálny Supaba
   })
 
   afterAll(async () => {
-    if (questionId) await admin.from('chapter_blocks').delete().eq('id', questionId)
+    if (chapterId) await admin.rpc('admin_delete_chapter', { p_chapter_id: chapterId })
   })
 
   it('hráčka nevidí súradnice správneho miesta', async () => {

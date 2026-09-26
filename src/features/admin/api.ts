@@ -148,6 +148,14 @@ export async function adminSetBlockAnswer(
   if (error) throw error
 }
 
+export async function adminDeleteBlockAnswer(blockId: string): Promise<void> {
+  const { error } = await supabase
+    .from('chapter_answers')
+    .delete()
+    .eq('block_id', blockId)
+  if (error) throw error
+}
+
 /** Správne miesto na mape + tolerancia v metroch. */
 export async function adminSetBlockPlaceAnswer(
   blockId: string,

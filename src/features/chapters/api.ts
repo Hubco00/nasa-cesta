@@ -265,6 +265,60 @@ export async function fetchBlockDescendants(
   return rows.filter((row) => row.id !== block.id && inside.has(row.id))
 }
 
+// --- Kroky kapitoly ----------------------------------------------------------
+
+/** Počet krokov hlavného listu (bez ich obsahu) — na „Krok 2 z 5“. */
+export async function fetchStepCount(chapterId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('chapter_step_count', {
+    p_chapter_id: chapterId,
+  })
+  if (error) throw error
+  return data ?? 0
+}
+
+/** Ktoré z daných blokov má hráčka splnené (krok, otázka, QR). */
+export async function fetchSolvedBlocks(blockIds: string[]): Promise<Set<string>> {
+  if (blockIds.length === 0) return new Set()
+  const { data, error } = await supabase
+    .from('player_block_progress')
+    .select('block_id, solved_at')
+    .in('block_id', blockIds)
+  if (error) throw error
+  return new Set((data ?? []).filter((row) => row.solved_at).map((row) => row.block_id))
+}
+
+/** Tlačidlo „Ďalej“ za príbehom/fotkou. */
+export async function completeBlockStep(blockId: string): Promise<void> {
+  const { error } = await supabase.rpc('complete_block_step', { p_block_id: blockId })
+  if (error) throw error
+}
+
+export interface BlockLocationResult {
+  status: 'within_range' | 'too_far'
+  distanceMeters: number | null
+}
+
+/** Krok, za ktorým sa pokračuje až na mieste — vzdialenosť vyhodnotí server. */
+export async function verifyBlockLocation(
+  blockId: string,
+  lat: number,
+  lng: number,
+  accuracy: number,
+): Promise<BlockLocationResult> {
+  const { data, error } = await supabase.rpc('verify_block_location', {
+    p_block_id: blockId,
+    p_lat: lat,
+    p_lng: lng,
+    p_accuracy: accuracy,
+  })
+  if (error) throw error
+  const result = (data ?? {}) as Partial<BlockLocationResult>
+  return {
+    status: result.status === 'within_range' ? 'within_range' : 'too_far',
+    distanceMeters: result.distanceMeters ?? null,
+  }
+}
+
 export async function completeManualStep(chapterId: string): Promise<void> {
   const { error } = await supabase.rpc('complete_manual_step', {
     p_chapter_id: chapterId,

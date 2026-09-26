@@ -164,7 +164,14 @@ insertom do `auth.users` — iba cez Supabase Auth:
 1. Prihlás sa ako admin → hore v appke choď na `/admin`.
 2. **+ Nová kapitola** → pomenuj ju a vytvor. (Typ odomknutia, predchádzajúcu
    kapitolu a správy nájdeš neskôr v zbalenej sekcii **Nastavenia kapitoly**.)
-3. V kapitole v sekcii **Obsah kapitoly** pridávaš:
+3. V kapitole v sekcii **Obsah kapitoly** pridávaš kroky. Hráčka ich prechádza
+   **po jednom** (Krok 1 z N) — ďalší krok jej server vydá až keď dokončí
+   predchádzajúci: príbeh/fotku tlačidlom **Ďalej** alebo **až keď príde na
+   miesto** (v príbehu/fotke zvolíš „Až keď príde na miesto“, vyberieš miesto na
+   mape a toleranciu; hráčka klikne „Skontrolovať polohu“, nepresnosť GPS sa
+   ešte pripočíta), otázku správnou odpoveďou, QR kód naskenovaním. Záverečná
+   akcia kapitoly (Pokračovať / otázka / QR / poloha kapitoly) je až po
+   všetkých krokoch. Obsah miest na mape zostáva voľný (bez krokov). Pridávaš:
    - **+ Príbeh** — názov, text príbehu a ľubovoľný počet fotiek s popiskami,
    - **+ Fotka** — samostatná fotka s popisom,
    - **+ Otázka** — otázka s voľnou odpoveďou alebo výberom z možností,

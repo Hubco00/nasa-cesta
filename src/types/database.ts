@@ -138,6 +138,7 @@ export type Database = {
           caption: string | null
           chapter_id: string
           created_at: string
+          gate: string
           id: string
           map_pin_id: string | null
           order_index: number
@@ -155,6 +156,7 @@ export type Database = {
           caption?: string | null
           chapter_id: string
           created_at?: string
+          gate?: string
           id?: string
           map_pin_id?: string | null
           order_index?: number
@@ -172,6 +174,7 @@ export type Database = {
           caption?: string | null
           chapter_id?: string
           created_at?: string
+          gate?: string
           id?: string
           map_pin_id?: string | null
           order_index?: number
@@ -843,6 +846,8 @@ export type Database = {
         Returns: undefined
       }
       block_is_visible: { Args: { p_block_id: string }; Returns: boolean }
+      block_step_passed: { Args: { p_block_id: string }; Returns: boolean }
+      block_step_reachable: { Args: { p_block_id: string }; Returns: boolean }
       chapter_effective_status: {
         Args: { p_chapter_id: string }
         Returns: string
@@ -853,6 +858,9 @@ export type Database = {
       }
       chapter_is_on_map: { Args: { p_chapter_id: string }; Returns: boolean }
       chapter_is_published: { Args: { p_chapter_id: string }; Returns: boolean }
+      chapter_step_count: { Args: { p_chapter_id: string }; Returns: number }
+      chapter_steps_done: { Args: { p_chapter_id: string }; Returns: boolean }
+      complete_block_step: { Args: { p_block_id: string }; Returns: undefined }
       complete_manual_step: { Args: { p_chapter_id: string }; Returns: Json }
       effective_status: {
         Args: {
@@ -926,6 +934,10 @@ export type Database = {
         Returns: number
       }
       is_admin: { Args: never; Returns: boolean }
+      mark_block_step_passed: {
+        Args: { p_block_id: string }
+        Returns: undefined
+      }
       normalize_answer: { Args: { p_answer: string }; Returns: string }
       verify_answer: {
         Args: { p_answer: string; p_chapter_id: string; p_condition_id: string }
@@ -933,6 +945,15 @@ export type Database = {
       }
       verify_block_answer: {
         Args: { p_answer: string; p_block_id: string }
+        Returns: Json
+      }
+      verify_block_location: {
+        Args: {
+          p_accuracy: number
+          p_block_id: string
+          p_lat: number
+          p_lng: number
+        }
         Returns: Json
       }
       verify_block_place: {
