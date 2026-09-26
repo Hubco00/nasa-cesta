@@ -391,6 +391,10 @@ export async function adminResetChapterPositions(): Promise<void> {
 
 // --- Podmienky odomknutia a mazanie kapitol -------------------------------
 
+function shorten(text: string, max: number): string {
+  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text
+}
+
 export interface QuestionOption {
   id: string
   chapterId: string
@@ -416,7 +420,7 @@ export async function adminListQuestions(): Promise<QuestionOption[]> {
         id: q.id,
         chapterId: q.chapter_id,
         order: chapter?.order_index ?? 0,
-        label: `${chapter?.title ?? '?'}${city ? ` · ${findCity(city)?.label ?? city}` : ''} — ${q.body_markdown ?? ''}`,
+        label: `${chapter?.title ?? '?'}${city ? ` · ${findCity(city)?.label ?? city}` : ''} — ${shorten(q.body_markdown ?? '', 40)}`,
       }
     })
     .sort((a, b) => a.order - b.order)

@@ -32,7 +32,7 @@ export function OutcomeFields({
   const hasPhoto = Boolean(draft.newFile || draft.existingPath)
 
   return (
-    <fieldset className="flex flex-col gap-2 rounded-xl border border-[var(--paper-border)] p-3">
+    <fieldset className="flex min-w-0 flex-col gap-2 rounded-xl border border-[var(--paper-border)] p-3">
       <legend className="px-1 text-sm font-medium">{title}</legend>
       <p className="text-xs text-[var(--color-muted)]">{hint}</p>
       <textarea

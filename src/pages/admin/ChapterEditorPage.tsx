@@ -273,7 +273,7 @@ export function ChapterEditorPage() {
                 setTitle(e.target.value)
                 if (isNew) setSlug(slugify(e.target.value))
               }}
-              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+              className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
             />
           </label>
 
@@ -282,7 +282,7 @@ export function ChapterEditorPage() {
             <input
               value={slug}
               onChange={(e) => setSlug(slugify(e.target.value))}
-              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+              className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
             />
           </label>
 
@@ -292,7 +292,7 @@ export function ChapterEditorPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+              className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
             />
           </label>
 
@@ -303,7 +303,7 @@ export function ChapterEditorPage() {
               onChange={(e) =>
                 setUnlockType(e.target.value as (typeof UNLOCK_TYPES)[number])
               }
-              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+              className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
             >
               {UNLOCK_TYPES.map((t) => (
                 <option key={t} value={t}>
@@ -313,7 +313,7 @@ export function ChapterEditorPage() {
             </select>
           </label>
 
-          <fieldset className="flex flex-col gap-3 rounded-xl border border-[var(--paper-border)] p-3">
+          <fieldset className="flex min-w-0 flex-col gap-3 rounded-xl border border-[var(--paper-border)] p-3">
             <legend className="px-1 text-sm font-medium">Kedy sa kapitola odomkne</legend>
             <p className="text-xs text-[var(--color-muted)]">
               Odomkne sa, keď sú splnené všetky nastavené podmienky. Bez podmienky je
@@ -325,7 +325,7 @@ export function ChapterEditorPage() {
               <select
                 value={requiredChapterId}
                 onChange={(e) => setRequiredChapterId(e.target.value)}
-                className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
               >
                 <option value="">— žiadna —</option>
                 {allChapters
@@ -343,7 +343,7 @@ export function ChapterEditorPage() {
               <select
                 value={requiredBlockId}
                 onChange={(e) => setRequiredBlockId(e.target.value)}
-                className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
               >
                 <option value="">— žiadna —</option>
                 {questions
@@ -389,7 +389,7 @@ export function ChapterEditorPage() {
                   value={maxAttempts}
                   onChange={(e) => setMaxAttempts(e.target.value)}
                   type="number"
-                  className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                  className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm">
@@ -401,7 +401,7 @@ export function ChapterEditorPage() {
                     setAnswerSaved(false)
                   }}
                   placeholder="napr. Bratislava, bratislava"
-                  className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                  className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
                 />
               </label>
             </>
@@ -415,7 +415,7 @@ export function ChapterEditorPage() {
                   <input
                     value={latitude}
                     onChange={(e) => setLatitude(e.target.value)}
-                    className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                    className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
                   />
                 </label>
                 <label className="flex flex-1 flex-col gap-1 text-sm">
@@ -423,7 +423,7 @@ export function ChapterEditorPage() {
                   <input
                     value={longitude}
                     onChange={(e) => setLongitude(e.target.value)}
-                    className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                    className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
                   />
                 </label>
               </div>
@@ -433,7 +433,7 @@ export function ChapterEditorPage() {
                   value={radius}
                   onChange={(e) => setRadius(e.target.value)}
                   type="number"
-                  className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                  className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
                 />
               </label>
               <button
@@ -451,7 +451,7 @@ export function ChapterEditorPage() {
             <input
               value={hint}
               onChange={(e) => setHint(e.target.value)}
-              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+              className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -459,7 +459,7 @@ export function ChapterEditorPage() {
             <input
               value={successMessage}
               onChange={(e) => setSuccessMessage(e.target.value)}
-              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+              className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -467,7 +467,7 @@ export function ChapterEditorPage() {
             <input
               value={failureMessage}
               onChange={(e) => setFailureMessage(e.target.value)}
-              className="rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+              className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
             />
           </label>
 
