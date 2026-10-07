@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Layout } from '../components/Layout'
+import { InstallBanner } from '../components/InstallBanner'
 import { LoadError } from '../components/LoadError'
 import { ChapterMapPath } from '../features/chapters/ChapterMapPath'
 import { fetchRoadSegments, fetchTimeline } from '../features/chapters/api'
@@ -40,6 +41,7 @@ export function ChaptersPage() {
 
   return (
     <Layout>
+      <InstallBanner className="mb-5" />
       <h1 className="mb-6 text-center font-[family-name:var(--font-display)] text-xl text-[var(--color-text)]">
         Naša cesta
       </h1>

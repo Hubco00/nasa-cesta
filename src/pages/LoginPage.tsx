@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { InstallBanner } from '../components/InstallBanner'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { toLoginEmail } from '../lib/login'
@@ -86,6 +87,7 @@ export function LoginPage() {
           </button>
         </form>
       </div>
+      <InstallBanner className="mt-6 w-full max-w-sm" />
     </div>
   )
 }
