@@ -142,6 +142,9 @@ function MapOverlay({
                 aria-label={`${city.label}${isNew ? ' — nové' : ''}`}
               >
                 <span className="map-bubble__dot" />
+                {city.drawLabel && (
+                  <span className="map-bubble__label">{city.label}</span>
+                )}
               </button>
             )
           })}
