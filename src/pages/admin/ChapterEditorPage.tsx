@@ -54,6 +54,7 @@ export function ChapterEditorPage() {
   const [requiredChapterId, setRequiredChapterId] = useState('')
   const [requiredBlockId, setRequiredBlockId] = useState('')
   const [hiddenUntilUnlocked, setHiddenUntilUnlocked] = useState(false)
+  const [isTutorial, setIsTutorial] = useState(false)
   const [questions, setQuestions] = useState<QuestionOption[]>([])
   const [deleting, setDeleting] = useState(false)
   const [isFinal, setIsFinal] = useState(false)
@@ -87,6 +88,7 @@ export function ChapterEditorPage() {
       setRequiredChapterId(row.required_chapter_id ?? '')
       setRequiredBlockId(row.required_block_id ?? '')
       setHiddenUntilUnlocked(row.hidden_until_unlocked)
+      setIsTutorial(row.is_tutorial)
       setIsFinal(row.is_final)
       setHint(row.hint ?? '')
       setSuccessMessage(row.success_message ?? '')
@@ -126,10 +128,12 @@ export function ChapterEditorPage() {
         slug,
         description: description || null,
         unlock_type: unlockType,
-        required_chapter_id: requiredChapterId || null,
-        required_block_id: requiredBlockId || null,
-        hidden_until_unlocked: hiddenUntilUnlocked,
-        is_final: isFinal,
+        // Tutoriál je na začiatku a na nič nečaká (inak by sa hra zasekla).
+        is_tutorial: isTutorial,
+        required_chapter_id: isTutorial ? null : requiredChapterId || null,
+        required_block_id: isTutorial ? null : requiredBlockId || null,
+        hidden_until_unlocked: isTutorial ? false : hiddenUntilUnlocked,
+        is_final: isTutorial ? false : isFinal,
         hint: hint || null,
         success_message: successMessage || null,
         failure_message: failureMessage || null,
@@ -139,12 +143,24 @@ export function ChapterEditorPage() {
         allowed_radius_meters: unlockType === 'location' ? Number(radius) || null : null,
       }
 
+      // Tutoriál ide v poradí vždy pred ostatné kapitoly.
+      const others = allChapters.filter((c) => c.id !== id)
+      const minOther = Math.min(...others.map((c) => c.order_index))
+      const firstOrder = Number.isFinite(minOther) ? minOther - 10 : 10
+
       if (isNew) {
         const maxOrder = allChapters.reduce((m, c) => Math.max(m, c.order_index), 0)
-        const created = await adminCreateChapter({ ...patch, order_index: maxOrder + 10 })
+        const created = await adminCreateChapter({
+          ...patch,
+          order_index: isTutorial ? firstOrder : maxOrder + 10,
+        })
         navigate(`/admin/chapters/${created.id}`, { replace: true })
       } else if (id) {
-        const updated = await adminUpdateChapter(id, patch)
+        const moveFirst = isTutorial && chapter && chapter.order_index >= minOther
+        const updated = await adminUpdateChapter(id, {
+          ...patch,
+          ...(moveFirst ? { order_index: firstOrder } : {}),
+        })
         setChapter(updated)
       }
 
@@ -268,6 +284,37 @@ export function ChapterEditorPage() {
 
       {settingsOpen && (
         <div className="flex flex-col gap-3 rounded-2xl bg-[var(--color-surface)] p-4 shadow-sm">
+          <div className="flex flex-col gap-1.5 text-sm">
+            Typ kapitoly
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  [false, 'Bežná kapitola'],
+                  [true, 'Tutoriál'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setIsTutorial(value)}
+                  className={`rounded-lg border px-3 py-2 ${
+                    isTutorial === value
+                      ? 'border-[var(--color-accent)] bg-[var(--color-accent)] text-white'
+                      : 'border-rose-200'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {isTutorial && (
+              <p className="text-xs text-[var(--color-muted)]">
+                Hráčka uvidí najprv iba túto kapitolu. Ostatné kapitoly sa jej objavia, až
+                keď tutoriál dokončí. Na mape je vždy prvý.
+              </p>
+            )}
+          </div>
+
           <label className="flex flex-col gap-1 text-sm">
             Názov
             <input
@@ -316,73 +363,79 @@ export function ChapterEditorPage() {
             </select>
           </label>
 
-          <fieldset className="flex min-w-0 flex-col gap-3 rounded-xl border border-[var(--paper-border)] p-3">
-            <legend className="px-1 text-sm font-medium">Kedy sa kapitola odomkne</legend>
-            <p className="text-xs text-[var(--color-muted)]">
-              Odomkne sa, keď sú splnené všetky nastavené podmienky. Bez podmienky je
-              dostupná hneď.
-            </p>
+          {!isTutorial && (
+            <fieldset className="flex min-w-0 flex-col gap-3 rounded-xl border border-[var(--paper-border)] p-3">
+              <legend className="px-1 text-sm font-medium">
+                Kedy sa kapitola odomkne
+              </legend>
+              <p className="text-xs text-[var(--color-muted)]">
+                Odomkne sa, keď sú splnené všetky nastavené podmienky. Bez podmienky je
+                dostupná hneď.
+              </p>
 
-            <label className="flex flex-col gap-1 text-sm">
-              Po dokončení kapitoly
-              <select
-                value={requiredChapterId}
-                onChange={(e) => setRequiredChapterId(e.target.value)}
-                className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-              >
-                <option value="">— žiadna —</option>
-                {allChapters
-                  .filter((c) => c.id !== id)
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.title}
-                    </option>
-                  ))}
-              </select>
-            </label>
+              <label className="flex flex-col gap-1 text-sm">
+                Po dokončení kapitoly
+                <select
+                  value={requiredChapterId}
+                  onChange={(e) => setRequiredChapterId(e.target.value)}
+                  className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                >
+                  <option value="">— žiadna —</option>
+                  {allChapters
+                    .filter((c) => c.id !== id)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.title}
+                      </option>
+                    ))}
+                </select>
+              </label>
 
-            <label className="flex flex-col gap-1 text-sm">
-              Po správnej odpovedi na otázku
-              <select
-                value={requiredBlockId}
-                onChange={(e) => setRequiredBlockId(e.target.value)}
-                className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-              >
-                <option value="">— žiadna —</option>
-                {questions
-                  .filter((q) => q.chapterId !== id)
-                  .map((q) => (
-                    <option key={q.id} value={q.id}>
-                      {q.label}
-                    </option>
-                  ))}
-              </select>
-            </label>
+              <label className="flex flex-col gap-1 text-sm">
+                Po správnej odpovedi na otázku
+                <select
+                  value={requiredBlockId}
+                  onChange={(e) => setRequiredBlockId(e.target.value)}
+                  className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
+                >
+                  <option value="">— žiadna —</option>
+                  {questions
+                    .filter((q) => q.chapterId !== id)
+                    .map((q) => (
+                      <option key={q.id} value={q.id}>
+                        {q.label}
+                      </option>
+                    ))}
+                </select>
+              </label>
 
-            <label className="flex items-start gap-2 text-sm">
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={hiddenUntilUnlocked}
+                  onChange={(e) => setHiddenUntilUnlocked(e.target.checked)}
+                  className="mt-1"
+                />
+                <span>
+                  Skryť na mape, kým sa neodomkne
+                  <span className="block text-xs text-[var(--color-muted)]">
+                    Inak ju hráčka vidí ako zamknutú (zámok s číslom).
+                  </span>
+                </span>
+              </label>
+            </fieldset>
+          )}
+
+          {!isTutorial && (
+            <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
-                checked={hiddenUntilUnlocked}
-                onChange={(e) => setHiddenUntilUnlocked(e.target.checked)}
-                className="mt-1"
+                checked={isFinal}
+                onChange={(e) => setIsFinal(e.target.checked)}
               />
-              <span>
-                Skryť na mape, kým sa neodomkne
-                <span className="block text-xs text-[var(--color-muted)]">
-                  Inak ju hráčka vidí ako zamknutú (zámok s číslom).
-                </span>
-              </span>
+              Finálna kapitola
             </label>
-          </fieldset>
-
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={isFinal}
-              onChange={(e) => setIsFinal(e.target.checked)}
-            />
-            Finálna kapitola
-          </label>
+          )}
 
           {unlockType === 'question' && (
             <>

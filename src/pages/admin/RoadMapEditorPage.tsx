@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { chapterNumbers, TUTORIAL_MARK } from '../../features/chapters/chapterNumbers'
 import { Layout } from '../../components/Layout'
 import {
   adminCreateSegments,
@@ -74,7 +75,9 @@ export function RoadMapEditorPage() {
     }
   }
 
-  const numberOf = new Map(chapters.map((c, i) => [c.id, i + 1]))
+  const numberOf = chapterNumbers(
+    chapters.map((c) => ({ key: c.id, isTutorial: c.is_tutorial })),
+  )
   const points = chapters.map((c) => positions[c.id]).filter(Boolean)
   const height = canvasHeight(points)
   const selected = segments.find((s) => s.id === selectedId) ?? null
@@ -217,7 +220,8 @@ export function RoadMapEditorPage() {
 
   const label = (id: string) => {
     const c = chapters.find((ch) => ch.id === id)
-    return `${numberOf.get(id)}. ${c?.title ?? ''}`
+    const number = numberOf.get(id)
+    return `${number === TUTORIAL_MARK ? number : `${number}.`} ${c?.title ?? ''}`
   }
 
   return (

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { chapterNumbers } from './chapterNumbers'
 import type { RoadSegment, TimelineEntry } from './types'
 import { CheckIcon, HeartIcon, LockIcon, unlockTypeIcon } from './icons'
 import { RoadCanvas } from './RoadCanvas'
@@ -25,6 +26,9 @@ export function ChapterMapPath({
   const points = entries.map((entry, i) => resolvePosition(entry, i))
   const height = canvasHeight(points)
   const pointById = new Map(entries.map((e, i) => [e.chapter_id, points[i]]))
+  const numbers = chapterNumbers(
+    entries.map((e) => ({ key: e.chapter_id, isTutorial: e.is_tutorial })),
+  )
 
   // Cestu kreslí admin v editore mapy; kým ju nenakreslí, ide hladko podľa poradia.
   const paths =
@@ -50,7 +54,7 @@ export function ChapterMapPath({
           style={{ ...toPercent(points[i], height), transform: HEX_ANCHOR_TRANSFORM }}
         >
           <div className="animate-fade-in-up" style={{ animationDelay: `${i * 70}ms` }}>
-            <MapNode entry={entry} index={i} />
+            <MapNode entry={entry} number={numbers.get(entry.chapter_id) ?? ''} />
           </div>
         </div>
       ))}
@@ -58,7 +62,7 @@ export function ChapterMapPath({
   )
 }
 
-function MapNode({ entry, index }: { entry: TimelineEntry; index: number }) {
+function MapNode({ entry, number }: { entry: TimelineEntry; number: string }) {
   const locked = entry.status === 'locked'
   const completed = entry.status === 'completed'
   const isFinal = entry.is_final
@@ -73,7 +77,7 @@ function MapNode({ entry, index }: { entry: TimelineEntry; index: number }) {
           {locked ? (
             <div className="flex flex-col items-center gap-0.5 text-white/70">
               <LockIcon className="h-4 w-4" />
-              <span className="text-xs font-semibold tabular-nums">{index + 1}</span>
+              <span className="text-xs font-semibold tabular-nums">{number}</span>
             </div>
           ) : isFinal ? (
             <HeartIcon className="h-7 w-7 text-white drop-shadow" />
@@ -97,7 +101,7 @@ function MapNode({ entry, index }: { entry: TimelineEntry; index: number }) {
 
   if (locked) {
     return (
-      <div aria-label={`Kapitola ${index + 1} — zamknuté`} className="cursor-not-allowed">
+      <div aria-label={`Kapitola ${number} — zamknuté`} className="cursor-not-allowed">
         {node}
       </div>
     )

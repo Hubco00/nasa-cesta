@@ -108,6 +108,7 @@ export function AdminPage() {
                 {chapter.title}
               </Link>
               <span className="text-xs text-[var(--color-muted)]">
+                {chapter.is_tutorial ? 'tutoriál · ' : ''}
                 {UNLOCK_LABEL[chapter.unlock_type] ?? chapter.unlock_type}
                 {chapter.is_final ? ' · finálna' : ''}
                 {' · '}

@@ -383,6 +383,7 @@ export type Database = {
           id: string
           is_final: boolean
           is_published: boolean
+          is_tutorial: boolean
           latitude: number | null
           longitude: number | null
           map_x: number | null
@@ -409,6 +410,7 @@ export type Database = {
           id?: string
           is_final?: boolean
           is_published?: boolean
+          is_tutorial?: boolean
           latitude?: number | null
           longitude?: number | null
           map_x?: number | null
@@ -435,6 +437,7 @@ export type Database = {
           id?: string
           is_final?: boolean
           is_published?: boolean
+          is_tutorial?: boolean
           latitude?: number | null
           longitude?: number | null
           map_x?: number | null
@@ -919,6 +922,7 @@ export type Database = {
           chapter_id: string
           description: string
           is_final: boolean
+          is_tutorial: boolean
           map_x: number
           map_y: number
           order_index: number
@@ -939,6 +943,7 @@ export type Database = {
         Returns: undefined
       }
       normalize_answer: { Args: { p_answer: string }; Returns: string }
+      tutorial_pending: { Args: never; Returns: boolean }
       verify_answer: {
         Args: { p_answer: string; p_chapter_id: string; p_condition_id: string }
         Returns: Json

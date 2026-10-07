@@ -162,7 +162,10 @@ insertom do `auth.users` — iba cez Supabase Auth:
 ## Ako pridávať obsah (admin)
 
 1. Prihlás sa ako admin → hore v appke choď na `/admin`.
-2. **+ Nová kapitola** → pomenuj ju a vytvor. (Typ odomknutia, predchádzajúcu
+2. **+ Nová kapitola** → pomenuj ju a vytvor. Typ **Tutoriál** = úvodná
+   kapitola: kým ju hráčka nedokončí, vidí iba ju (ostatné kapitoly server
+   nevydá ani na mape, ani cez API); potom sa objavia ostatné. Tutoriál je na
+   mape vždy prvý, nečísluje sa a nemá podmienky odomknutia. (Typ odomknutia, predchádzajúcu
    kapitolu a správy nájdeš neskôr v zbalenej sekcii **Nastavenia kapitoly**.)
 3. V kapitole v sekcii **Obsah kapitoly** pridávaš kroky. Hráčka ich prechádza
    **po jednom** (Krok 1 z N) — ďalší krok jej server vydá až keď dokončí
