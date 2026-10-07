@@ -102,6 +102,28 @@ npx supabase gen types typescript --local > src/types/database.ts
 4. V **Storage** skontroluj, že vznikol privátny bucket `chapter-photos`
    (vytvára ho migrácia `20260101000006_storage.sql`).
 
+### Záloha a prenos obsahu (lokálne → produkcia)
+
+Všetko, čo napíšeš v lokálnom admine, je iba v lokálnom Dockeri. **Nikdy
+nespúšťaj `npm run db:reset`, `npx supabase db reset` ani
+`npx supabase stop --no-backup`** — zmažú to.
+
+```bash
+npm run backup        # → ~/nasa-cesta-zaloha/<dátum_čas>/ (mimo gitu — repo je verejné)
+```
+
+Záloha obsahuje kapitoly, príbehy, otázky aj odpovede, miesta, cestu na mape,
+hashe QR kódov a všetky fotky a videá (s kontrolnými súčtami), plus SQL dump
+celej lokálnej DB. Prenos do ostrého projektu (po `db push`) — iba pridáva,
+nič nemaže, dá sa spustiť opakovane; s heslami zároveň vytvorí účty:
+
+```bash
+TARGET_SUPABASE_URL=https://<ref>.supabase.co \
+TARGET_SERVICE_ROLE_KEY=<service_role kľúč — iba lokálne, nikdy do gitu> \
+HUBCO_PASSWORD=… VIKI_PASSWORD=… \
+npm run restore -- ~/nasa-cesta-zaloha/<dátum_čas>
+```
+
 ### Vytvorenie admin používateľa (produkcia)
 
 Auth používateľov na hostovanom projekte nikdy nevytváraj priamym SQL

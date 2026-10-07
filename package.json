@@ -14,7 +14,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "db:reset": "supabase db reset && sh supabase/seed-storage.sh"
+    "db:reset": "supabase db reset && sh supabase/seed-storage.sh",
+    "backup": "node scripts/backup.mjs",
+    "restore": "node scripts/restore.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
