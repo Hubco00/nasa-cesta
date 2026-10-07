@@ -21,6 +21,12 @@ const UNLOCK_LABEL: Record<string, string> = {
   admin: 'admin odomkne',
 }
 
+function stepsLabel(count: number): string {
+  if (count === 1) return '1 krok'
+  if (count >= 2 && count <= 4) return `${count} kroky`
+  return `${count} krokov`
+}
+
 export function AdminPage() {
   const [chapters, setChapters] = useState<ChapterRow[]>([])
   const [summary, setSummary] = useState<Record<string, ChapterContentSummary>>({})
@@ -108,11 +114,15 @@ export function AdminPage() {
                 {chapter.title}
               </Link>
               <span className="text-xs text-[var(--color-muted)]">
-                {chapter.is_tutorial ? 'tutoriál · ' : ''}
-                {UNLOCK_LABEL[chapter.unlock_type] ?? chapter.unlock_type}
-                {chapter.is_final ? ' · finálna' : ''}
-                {' · '}
-                {summary[chapter.id]?.storyBlocks ?? 0} položiek v liste
+                {[
+                  chapter.is_tutorial && 'tutoriál',
+                  chapter.unlock_type !== 'manual' &&
+                    `${UNLOCK_LABEL[chapter.unlock_type] ?? chapter.unlock_type} (starý spôsob)`,
+                  chapter.is_final && 'finálna',
+                  stepsLabel(summary[chapter.id]?.storyBlocks ?? 0),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </span>
               {(chapter.required_chapter_id || chapter.required_block_id) && (
                 <span className="text-xs text-[var(--color-muted)]">

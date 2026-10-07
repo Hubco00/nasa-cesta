@@ -165,16 +165,19 @@ insertom do `auth.users` — iba cez Supabase Auth:
 2. **+ Nová kapitola** → pomenuj ju a vytvor. Typ **Tutoriál** = úvodná
    kapitola: kým ju hráčka nedokončí, vidí iba ju (ostatné kapitoly server
    nevydá ani na mape, ani cez API); potom sa objavia ostatné. Tutoriál je na
-   mape vždy prvý, nečísluje sa a nemá podmienky odomknutia. (Typ odomknutia, predchádzajúcu
-   kapitolu a správy nájdeš neskôr v zbalenej sekcii **Nastavenia kapitoly**.)
+   mape vždy prvý, nečísluje sa a nemá podmienky odomknutia. Nastavenia
+   kapitoly (zbalená sekcia **Nastavenia kapitoly**) sú iba typ, názov, popis,
+   kedy sa odomkne a či je finálna — otázky, QR kódy a polohu pridávaš ako
+   kroky v obsahu.
 3. V kapitole v sekcii **Obsah kapitoly** pridávaš kroky. Hráčka ich prechádza
    **po jednom** (Krok 1 z N) — ďalší krok jej server vydá až keď dokončí
    predchádzajúci: príbeh/fotku tlačidlom **Ďalej** alebo **až keď príde na
    miesto** (v príbehu/fotke zvolíš „Až keď príde na miesto“, vyberieš miesto na
    mape a toleranciu; hráčka klikne „Skontrolovať polohu“, nepresnosť GPS sa
-   ešte pripočíta), otázku správnou odpoveďou, QR kód naskenovaním. Záverečná
-   akcia kapitoly (Pokračovať / otázka / QR / poloha kapitoly) je až po
-   všetkých krokoch. Obsah miest na mape zostáva voľný (bez krokov). Pridávaš:
+   ešte pripočíta), otázku správnou odpoveďou, QR kód naskenovaním. Po
+   poslednom kroku kapitolu dokončí tlačidlom **Pokračovať**. (Staršie kapitoly
+   so samostatnou otázkou/QR/polohou kapitoly fungujú ďalej; v nastaveniach ich
+   jedným tlačidlom prepneš na dokončenie tlačidlom.) Obsah miest na mape zostáva voľný (bez krokov). Pridávaš:
    - **+ Príbeh** — názov, text príbehu a ľubovoľný počet fotiek s popiskami,
    - **+ Fotka** — samostatná fotka s popisom,
    - **+ Otázka** — otázka s voľnou odpoveďou alebo výberom z možností,

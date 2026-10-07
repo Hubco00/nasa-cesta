@@ -2,18 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Layout } from '../../components/Layout'
 import { ContentManager } from '../../features/admin/content/ContentManager'
-import { PlaceField } from '../../features/admin/content/PlaceField'
-import { ConditionsEditor } from '../../features/admin/ConditionsEditor'
 import { MapPinsEditor } from '../../features/admin/MapPinsEditor'
-import { QrTokenEditor } from '../../features/admin/QrTokenEditor'
 import {
   adminCreateChapter,
-  adminGetChapterAnswer,
   adminDeleteChapter,
   adminGetChapter,
   adminListChapters,
   adminListQuestions,
-  adminSetChapterAnswer,
   adminUpdateChapter,
   type ChapterRow,
   type QuestionOption,
@@ -29,14 +24,15 @@ function toErrorMessage(err: unknown): string {
   return `Uloženie zlyhalo: ${message}`
 }
 
-const UNLOCK_TYPES = [
-  'manual',
-  'qr_code',
-  'location',
-  'question',
-  'combined',
-  'admin',
-] as const
+// Starší spôsob dokončenia celej kapitoly. Otázky, QR kódy a polohu teraz admin
+// pridáva ako kroky v obsahu; kapitola sa dokončí tlačidlom na konci (manual).
+const LEGACY_COMPLETION: Record<string, string> = {
+  qr_code: 'naskenovaním QR kódu',
+  location: 'príchodom na miesto',
+  question: 'odpoveďou na otázku',
+  combined: 'kombináciou podmienok',
+  admin: 'až keď ju odomkneš ty',
+}
 
 export function ChapterEditorPage() {
   const { id } = useParams<{ id: string }>()
@@ -50,7 +46,6 @@ export function ChapterEditorPage() {
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
-  const [unlockType, setUnlockType] = useState<(typeof UNLOCK_TYPES)[number]>('manual')
   const [requiredChapterId, setRequiredChapterId] = useState('')
   const [requiredBlockId, setRequiredBlockId] = useState('')
   const [hiddenUntilUnlocked, setHiddenUntilUnlocked] = useState(false)
@@ -58,15 +53,6 @@ export function ChapterEditorPage() {
   const [questions, setQuestions] = useState<QuestionOption[]>([])
   const [deleting, setDeleting] = useState(false)
   const [isFinal, setIsFinal] = useState(false)
-  const [hint, setHint] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
-  const [failureMessage, setFailureMessage] = useState('')
-  const [answer, setAnswer] = useState('')
-  const [answerSaved, setAnswerSaved] = useState(false)
-  const [maxAttempts, setMaxAttempts] = useState('')
-  const [latitude, setLatitude] = useState('')
-  const [longitude, setLongitude] = useState('')
-  const [radius, setRadius] = useState('150')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(isNew)
@@ -84,29 +70,12 @@ export function ChapterEditorPage() {
       setTitle(row.title)
       setSlug(row.slug)
       setDescription(row.description ?? '')
-      setUnlockType(row.unlock_type as (typeof UNLOCK_TYPES)[number])
       setRequiredChapterId(row.required_chapter_id ?? '')
       setRequiredBlockId(row.required_block_id ?? '')
       setHiddenUntilUnlocked(row.hidden_until_unlocked)
       setIsTutorial(row.is_tutorial)
       setIsFinal(row.is_final)
-      setHint(row.hint ?? '')
-      setSuccessMessage(row.success_message ?? '')
-      setFailureMessage(row.failure_message ?? '')
-      setLatitude(row.latitude?.toString() ?? '')
-      setLongitude(row.longitude?.toString() ?? '')
-      setRadius(row.allowed_radius_meters?.toString() ?? '150')
-      const qc = row.question_config as {
-        prompt?: string
-        maxAttempts?: number | null
-      } | null
-      setMaxAttempts(qc?.maxAttempts?.toString() ?? '')
       setLoading(false)
-      if (row.unlock_type === 'question') {
-        void adminGetChapterAnswer(row.id).then((answers) => {
-          if (answers) setAnswer(answers.join(', '))
-        })
-      }
     })
   }, [id, isNew])
 
@@ -114,33 +83,16 @@ export function ChapterEditorPage() {
     setSaving(true)
     setError(null)
     try {
-      const questionConfig =
-        unlockType === 'question'
-          ? {
-              type: 'single',
-              maxAttempts: maxAttempts ? Number(maxAttempts) : null,
-              showHintOnWrongAnswer: true,
-            }
-          : null
-
       const patch = {
         title,
         slug,
         description: description || null,
-        unlock_type: unlockType,
         // Tutoriál je na začiatku a na nič nečaká (inak by sa hra zasekla).
         is_tutorial: isTutorial,
         required_chapter_id: isTutorial ? null : requiredChapterId || null,
         required_block_id: isTutorial ? null : requiredBlockId || null,
         hidden_until_unlocked: isTutorial ? false : hiddenUntilUnlocked,
         is_final: isTutorial ? false : isFinal,
-        hint: hint || null,
-        success_message: successMessage || null,
-        failure_message: failureMessage || null,
-        question_config: questionConfig,
-        latitude: unlockType === 'location' ? Number(latitude) || null : null,
-        longitude: unlockType === 'location' ? Number(longitude) || null : null,
-        allowed_radius_meters: unlockType === 'location' ? Number(radius) || null : null,
       }
 
       // Tutoriál ide v poradí vždy pred ostatné kapitoly.
@@ -152,6 +104,7 @@ export function ChapterEditorPage() {
         const maxOrder = allChapters.reduce((m, c) => Math.max(m, c.order_index), 0)
         const created = await adminCreateChapter({
           ...patch,
+          unlock_type: 'manual',
           order_index: isTutorial ? firstOrder : maxOrder + 10,
         })
         navigate(`/admin/chapters/${created.id}`, { replace: true })
@@ -162,17 +115,6 @@ export function ChapterEditorPage() {
           ...(moveFirst ? { order_index: firstOrder } : {}),
         })
         setChapter(updated)
-      }
-
-      if (unlockType === 'question' && answer.trim() && id) {
-        await adminSetChapterAnswer(
-          id,
-          answer
-            .split(',')
-            .map((a) => a.trim())
-            .filter(Boolean),
-        )
-        setAnswerSaved(true)
       }
     } catch (err) {
       setError(toErrorMessage(err))
@@ -205,11 +147,22 @@ export function ChapterEditorPage() {
     setChapter(updated)
   }
 
-  function useCurrentLocation() {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      setLatitude(pos.coords.latitude.toString())
-      setLongitude(pos.coords.longitude.toString())
-    })
+  async function switchToManualCompletion() {
+    if (!id) return
+    setError(null)
+    try {
+      setChapter(
+        await adminUpdateChapter(id, {
+          unlock_type: 'manual',
+          question_config: null,
+          latitude: null,
+          longitude: null,
+          allowed_radius_meters: null,
+        }),
+      )
+    } catch (err) {
+      setError(toErrorMessage(err))
+    }
   }
 
   const back = { to: '/admin', label: 'Admin panel' }
@@ -242,7 +195,8 @@ export function ChapterEditorPage() {
       </h1>
       {isNew && (
         <p className="mb-4 text-sm text-[var(--color-muted)]">
-          Najprv kapitolu pomenuj a vytvor — potom do nej pridáš príbehy, fotky a otázky.
+          Najprv kapitolu pomenuj a vytvor — potom do nej pridáš príbehy, fotky, otázky a
+          QR kódy.
         </p>
       )}
 
@@ -276,7 +230,7 @@ export function ChapterEditorPage() {
               Nastavenia kapitoly
             </span>
             <span className="text-sm text-[var(--color-muted)]">
-              {settingsOpen ? '▲ skryť' : '▼ názov, odomknutie, správy'}
+              {settingsOpen ? '▲ skryť' : '▼ názov, popis, odomknutie'}
             </span>
           </button>
         </>
@@ -344,23 +298,6 @@ export function ChapterEditorPage() {
               rows={2}
               className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
             />
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm">
-            Typ odomknutia
-            <select
-              value={unlockType}
-              onChange={(e) =>
-                setUnlockType(e.target.value as (typeof UNLOCK_TYPES)[number])
-              }
-              className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-            >
-              {UNLOCK_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
           </label>
 
           {!isTutorial && (
@@ -437,88 +374,22 @@ export function ChapterEditorPage() {
             </label>
           )}
 
-          {unlockType === 'question' && (
-            <>
-              <label className="flex flex-col gap-1 text-sm">
-                Max. počet pokusov (prázdne = neobmedzené)
-                <input
-                  value={maxAttempts}
-                  onChange={(e) => setMaxAttempts(e.target.value)}
-                  type="number"
-                  className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm">
-                Správna odpoveď (viac variantov oddeľ čiarkou)
-                <input
-                  value={answer}
-                  onChange={(e) => {
-                    setAnswer(e.target.value)
-                    setAnswerSaved(false)
-                  }}
-                  placeholder="napr. Bratislava, bratislava"
-                  className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-                />
-              </label>
-            </>
-          )}
-
-          {unlockType === 'location' && (
-            <div className="flex flex-col gap-2 rounded-xl border border-rose-200 p-3">
-              <PlaceField
-                label="Kde sa kapitola dokončí"
-                value={
-                  latitude && longitude
-                    ? {
-                        lat: Number(latitude),
-                        lng: Number(longitude),
-                        radiusMeters: Number(radius) || 150,
-                      }
-                    : null
-                }
-                onChange={(place) => {
-                  setLatitude(String(place.lat))
-                  setLongitude(String(place.lng))
-                  setRadius(String(place.radiusMeters))
-                }}
-                radiusOptions={[50, 100, 150, 300, 500, 1000, 2000]}
-                defaultRadius={150}
-                help="Na konci kapitoly uvidí tlačidlo „Skontrolovať polohu“."
-              />
+          {chapter && LEGACY_COMPLETION[chapter.unlock_type] && (
+            <div className="flex flex-col gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+              <p>
+                Táto kapitola sa dokončuje po starom —{' '}
+                {LEGACY_COMPLETION[chapter.unlock_type]}. Otázky, QR kódy a polohu teraz
+                pridávaš ako kroky v obsahu kapitoly.
+              </p>
               <button
-                onClick={useCurrentLocation}
                 type="button"
-                className="self-start text-sm text-[var(--color-accent)] underline"
+                onClick={() => void switchToManualCompletion()}
+                className="self-start rounded-lg border border-amber-500 px-3 py-1.5 font-medium"
               >
-                Použiť moju aktuálnu polohu
+                Dokončovať tlačidlom na konci
               </button>
             </div>
           )}
-
-          <label className="flex flex-col gap-1 text-sm">
-            Nápoveda
-            <input
-              value={hint}
-              onChange={(e) => setHint(e.target.value)}
-              className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Správa pri úspechu
-            <input
-              value={successMessage}
-              onChange={(e) => setSuccessMessage(e.target.value)}
-              className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Správa pri neúspechu
-            <input
-              value={failureMessage}
-              onChange={(e) => setFailureMessage(e.target.value)}
-              className="w-full min-w-0 rounded-lg border border-rose-200 bg-transparent px-3 py-2"
-            />
-          </label>
 
           {error && <p className="text-sm text-rose-600">{error}</p>}
 
@@ -528,7 +399,6 @@ export function ChapterEditorPage() {
             className="self-start rounded-lg bg-[var(--color-accent)] px-4 py-2 font-medium text-white disabled:opacity-60"
           >
             {saving ? 'Ukladám…' : isNew ? 'Vytvoriť kapitolu' : 'Uložiť zmeny'}
-            {answerSaved && ' ✓'}
           </button>
 
           {!isNew && (
@@ -543,20 +413,6 @@ export function ChapterEditorPage() {
             </div>
           )}
         </div>
-      )}
-
-      {settingsOpen && !isNew && id && unlockType === 'qr_code' && (
-        <section className="mt-6">
-          <h2 className="mb-2 font-medium">QR kód</h2>
-          <QrTokenEditor chapterId={id} conditionId={null} />
-        </section>
-      )}
-
-      {settingsOpen && !isNew && id && unlockType === 'combined' && (
-        <section className="mt-6">
-          <h2 className="mb-2 font-medium">Kombinované podmienky</h2>
-          <ConditionsEditor chapterId={id} />
-        </section>
       )}
     </Layout>
   )
