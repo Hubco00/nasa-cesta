@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { PhotoLightbox } from '../../components/PhotoLightbox'
+import { isVideoPath, withFirstFrame } from '../../lib/media'
 import { getSignedPhotoUrls } from '../../lib/storage'
 
 interface PhotoProps {
@@ -10,6 +11,7 @@ interface PhotoProps {
 
 function useSignedUrl(storagePath: string) {
   const [url, setUrl] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
   useEffect(() => {
     let active = true
     getSignedPhotoUrls([storagePath]).then((urls) => {
@@ -18,18 +20,55 @@ function useSignedUrl(storagePath: string) {
     return () => {
       active = false
     }
-  }, [storagePath])
-  return url
+  }, [storagePath, attempt])
+  // Podpísaná URL platí 5 minút — video spustené neskôr si vypýta novú (raz).
+  const refresh = () => {
+    if (attempt === 0) setAttempt(1)
+  }
+  return { url, refresh }
+}
+
+/** Video priamo v liste — prehrá sa na mieste, so zvukom a ovládaním. */
+function InlineVideo({
+  url,
+  label,
+  className,
+  onError,
+}: {
+  url: string
+  label: string
+  className: string
+  onError: () => void
+}) {
+  return (
+    <video
+      src={withFirstFrame(url)}
+      controls
+      playsInline
+      preload="metadata"
+      aria-label={label}
+      onError={onError}
+      className={`${className} bg-black object-contain`}
+    />
+  )
 }
 
 /** Samostatná fotka (karta s popiskom); ťuknutie ju otvorí na celú obrazovku. */
 export function PhotoFigure({ storagePath, alt, caption }: PhotoProps) {
-  const url = useSignedUrl(storagePath)
+  const { url, refresh } = useSignedUrl(storagePath)
   const [open, setOpen] = useState(false)
+  const video = isVideoPath(storagePath)
 
   return (
     <figure className="overflow-hidden rounded-2xl bg-[var(--color-surface)] shadow-sm">
-      {url ? (
+      {url && video ? (
+        <InlineVideo
+          url={url}
+          label={alt || caption || 'Video'}
+          className="max-h-[75vh] w-full"
+          onError={refresh}
+        />
+      ) : url ? (
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -52,7 +91,7 @@ export function PhotoFigure({ storagePath, alt, caption }: PhotoProps) {
           {caption}
         </figcaption>
       )}
-      {open && url && (
+      {open && url && !video && (
         <PhotoLightbox
           src={url}
           alt={alt ?? ''}
@@ -87,9 +126,33 @@ function LetterPhoto({
   caption,
   square,
 }: PhotoProps & { square: boolean }) {
-  const url = useSignedUrl(storagePath)
+  const { url, refresh } = useSignedUrl(storagePath)
   const [open, setOpen] = useState(false)
   const aspect = square ? 'aspect-square' : 'aspect-[4/3]'
+
+  if (isVideoPath(storagePath)) {
+    return (
+      <figure className="flex flex-col gap-1.5">
+        <div className="rounded-sm bg-white/60 p-1.5 shadow-[0_6px_14px_-8px_rgba(74,26,36,0.55)] ring-1 ring-[var(--paper-border)] dark:bg-white/10">
+          {url ? (
+            <InlineVideo
+              url={url}
+              label={alt || caption || 'Video'}
+              className={`${square ? 'aspect-square' : 'max-h-[70vh]'} w-full rounded-[2px]`}
+              onError={refresh}
+            />
+          ) : (
+            <div className={`${aspect} w-full animate-pulse rounded-[2px] bg-black/5`} />
+          )}
+        </div>
+        {caption && (
+          <figcaption className="px-1 text-center text-sm italic leading-snug opacity-80">
+            {caption}
+          </figcaption>
+        )}
+      </figure>
+    )
+  }
 
   return (
     <figure className="flex flex-col gap-1.5">

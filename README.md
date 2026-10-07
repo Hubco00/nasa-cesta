@@ -179,7 +179,11 @@ insertom do `auth.users` — iba cez Supabase Auth:
    so samostatnou otázkou/QR/polohou kapitoly fungujú ďalej; v nastaveniach ich
    jedným tlačidlom prepneš na dokončenie tlačidlom.) Obsah miest na mape zostáva voľný (bez krokov). Pridávaš:
    - **+ Príbeh** — názov, text príbehu a ľubovoľný počet fotiek s popiskami,
-   - **+ Fotka** — samostatná fotka s popisom,
+   - **+ Fotka / video** — samostatná fotka alebo krátke video (so zvukom) s
+     popisom. Video sa dá nahrať všade, kde fotka (k príbehu, ako odmena v liste
+     po odpovedi, pri meste); hráčka ho prehrá priamo v liste. Fotky do 10 MB,
+     videá do 50 MB (MP4, WebM, MOV). Najistejšie hrá MP4 (H.264) — na iPhone
+     nastav Fotoaparát → Formáty → „Najkompatibilnejšie“.
    - **+ Otázka** — otázka s voľnou odpoveďou alebo výberom z možností,
      správna odpoveď, nápoveda, a **list po správnej** aj **po nesprávnej**
      odpovedi — každý s voliteľnou fotkou ako odmenou. Listy a fotky sa

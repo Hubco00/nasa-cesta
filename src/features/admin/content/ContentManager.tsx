@@ -1,6 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Modal } from '../../../components/Modal'
+import { MediaThumb } from '../../../components/MediaThumb'
 import { PhotoLightbox } from '../../../components/PhotoLightbox'
+import { isVideoPath } from '../../../lib/media'
 import { getSignedPhotoUrls, removeChapterPhotos } from '../../../lib/storage'
 import type { BlockQuestionConfig } from '../../chapters/types'
 import {
@@ -32,11 +34,18 @@ const KIND_LABEL: Record<Kind, string> = {
   question: 'Otázka',
   qr: 'QR kód',
 }
+const ADD_LABEL: Record<Kind, string> = { ...KIND_LABEL, photo: 'Fotka / video' }
 const FORM_TITLE: Record<Kind, [string, string]> = {
   story: ['Nový príbeh', 'Upraviť príbeh'],
-  photo: ['Nová fotka', 'Upraviť fotku'],
+  photo: ['Nová fotka alebo video', 'Upraviť fotku'],
   question: ['Nová otázka', 'Upraviť otázku'],
   qr: ['Nový QR kód', 'Upraviť QR kód'],
+}
+
+/** Typ položky pre admina — samostatné video je blok typu photo s videom. */
+function labelOf(item: ChapterBlockRow): string {
+  const kind = KIND_OF[item.block_type]
+  return kind === 'photo' && isVideoPath(item.storage_path) ? 'Video' : KIND_LABEL[kind]
 }
 
 export function ContentManager({
@@ -104,8 +113,8 @@ export function ContentManager({
     const inside = descendantsOf(item.id)
     const withPhoto = inside.filter((c) => c.storage_path)
     const content = kind === 'qr' && inside.length > 0 ? ' aj s obsahom pod ním' : ''
-    const extra = withPhoto.length > 0 ? ` (${withPhoto.length} fotiek)` : ''
-    const label = kind === 'qr' ? KIND_LABEL[kind] : KIND_LABEL[kind].toLowerCase()
+    const extra = withPhoto.length > 0 ? ` (fotky/videá: ${withPhoto.length})` : ''
+    const label = kind === 'qr' ? labelOf(item) : labelOf(item).toLowerCase()
     if (!confirm(`Zmazať — ${label}${content}${extra}? Nedá sa to vrátiť.`)) return
     const paths = [item, ...withPhoto].flatMap((b) => b.storage_path ?? [])
     setError(null)
@@ -186,13 +195,20 @@ export function ContentManager({
             onClick={() => setForm({ kind })}
             className="rounded-lg border border-[var(--color-accent)] px-2 py-2.5 text-sm font-medium text-[var(--color-accent)] transition hover:bg-[var(--color-accent)] hover:text-white"
           >
-            + {KIND_LABEL[kind]}
+            + {ADD_LABEL[kind]}
           </button>
         ))}
       </div>
 
       {form && (
-        <Modal title={FORM_TITLE[form.kind][form.block ? 1 : 0]} onClose={closeAndReload}>
+        <Modal
+          title={
+            form.block && isVideoPath(form.block.storage_path) && form.kind === 'photo'
+              ? 'Upraviť video'
+              : FORM_TITLE[form.kind][form.block ? 1 : 0]
+          }
+          onClose={closeAndReload}
+        >
           {form.kind === 'story' && (
             <StoryForm
               chapterId={chapterId}
@@ -307,7 +323,7 @@ function ItemCard({
               <span className="opacity-70">Krok {stepNumber} ·</span>
             )}
             {kind === 'qr' && <QrIcon className="h-3 w-3" />}
-            {KIND_LABEL[kind]}
+            {labelOf(item)}
           </span>
           {stepNumber !== undefined &&
             (kind === 'story' || kind === 'photo') &&
@@ -405,13 +421,14 @@ function ItemCard({
                 key={p.id}
                 type="button"
                 onClick={() => setPreview(p)}
-                aria-label="Zobraziť fotku"
+                aria-label={
+                  isVideoPath(p.storage_path) ? 'Prehrať video' : 'Zobraziť fotku'
+                }
                 className="shrink-0 cursor-zoom-in"
               >
-                <img
+                <MediaThumb
                   src={photoUrls[p.storage_path]}
-                  alt=""
-                  className="h-14 w-14 rounded object-cover"
+                  video={isVideoPath(p.storage_path)}
                 />
               </button>
             ) : (
@@ -426,6 +443,7 @@ function ItemCard({
           src={photoUrls[preview.storage_path]}
           alt=""
           caption={preview.caption}
+          video={isVideoPath(preview.storage_path)}
           onClose={() => setPreview(null)}
         />
       )}

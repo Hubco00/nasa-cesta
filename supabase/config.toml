@@ -118,8 +118,9 @@ file_size_limit = "50MiB"
 
 [storage.buckets.chapter-photos]
 public = false
-file_size_limit = "10MiB"
-allowed_mime_types = ["image/png", "image/jpeg", "image/webp"]
+# Fotky aj krátke videá (aplikácia stráži fotky do 10 MB, videá do 50 MB).
+file_size_limit = "50MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/webp", "video/mp4", "video/webm", "video/quicktime"]
 
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]

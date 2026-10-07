@@ -6,11 +6,14 @@ export function PhotoLightbox({
   src,
   alt,
   caption,
+  video = false,
   onClose,
 }: {
   src: string
   alt: string
   caption?: string | null
+  /** Video sa prehrá rovno (otvorené ťuknutím, takže aj so zvukom). */
+  video?: boolean
   onClose: () => void
 }) {
   useOverlay(onClose)
@@ -30,12 +33,24 @@ export function PhotoLightbox({
         <CloseButton light onClick={onClose} label="Zavrieť fotku" />
       </div>
       <div className="flex min-h-0 flex-1 items-center justify-center px-3">
-        <img
-          src={src}
-          alt={alt}
-          onClick={(e) => e.stopPropagation()}
-          className="max-h-full max-w-full rounded object-contain"
-        />
+        {video ? (
+          <video
+            src={src}
+            controls
+            autoPlay
+            playsInline
+            aria-label={alt || 'Video'}
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-full max-w-full rounded"
+          />
+        ) : (
+          <img
+            src={src}
+            alt={alt}
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-full max-w-full rounded object-contain"
+          />
+        )}
       </div>
       <p className="min-h-16 px-6 pb-8 pt-3 text-center text-sm italic text-white/85">
         {caption}

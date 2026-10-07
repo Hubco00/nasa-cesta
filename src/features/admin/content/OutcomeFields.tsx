@@ -1,4 +1,11 @@
-import type { ChangeEvent } from 'react'
+import { useState, type ChangeEvent } from 'react'
+import { MediaThumb } from '../../../components/MediaThumb'
+import {
+  isVideoFile,
+  isVideoPath,
+  MEDIA_ACCEPT,
+  mediaFileError,
+} from '../../../lib/media'
 import { inputClass } from './ui'
 
 /** Rozpracovaný list po odpovedi (správnej alebo nesprávnej) vo formulári otázky. */
@@ -30,6 +37,10 @@ export function OutcomeFields({
 }) {
   const previewSrc = draft.newPreviewUrl ?? (draft.existingPath ? existingUrl : undefined)
   const hasPhoto = Boolean(draft.newFile || draft.existingPath)
+  const video = draft.newFile
+    ? isVideoFile(draft.newFile)
+    : isVideoPath(draft.existingPath)
+  const [fileError, setFileError] = useState<string | null>(null)
 
   return (
     <fieldset className="flex min-w-0 flex-col gap-2 rounded-xl border border-[var(--paper-border)] p-3">
@@ -47,18 +58,16 @@ export function OutcomeFields({
       {hasPhoto ? (
         <div className="flex items-center gap-3 rounded-lg border border-[var(--paper-border)] p-2">
           {previewSrc ? (
-            <img
-              src={previewSrc}
-              alt=""
-              className="h-14 w-14 shrink-0 rounded object-cover"
-            />
+            <MediaThumb src={previewSrc} video={video} />
           ) : (
             <div className="h-14 w-14 shrink-0 rounded bg-black/10" />
           )}
           <input
             value={draft.caption}
             onChange={(e) => onChange({ caption: e.target.value })}
-            placeholder="Popis k fotke (voliteľné)"
+            placeholder={
+              video ? 'Popis k videu (voliteľné)' : 'Popis k fotke (voliteľné)'
+            }
             aria-label={`${title} — popis fotky`}
             className={`${inputClass} text-sm`}
           />
@@ -75,19 +84,23 @@ export function OutcomeFields({
         </div>
       ) : (
         <label className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-[var(--paper-border)] px-3 py-2.5 text-sm text-[var(--color-accent)] hover:bg-white/30">
-          + Pridať fotku ako odmenu
+          + Pridať fotku alebo video ako odmenu
           <input
             type="file"
-            accept="image/png,image/jpeg,image/webp"
-            aria-label={`${title} — fotka`}
+            accept={MEDIA_ACCEPT}
+            aria-label={`${title} — fotka alebo video`}
             onChange={(e: ChangeEvent<HTMLInputElement>) => {
-              onPickFile(e.target.files?.[0] ?? null)
+              const file = e.target.files?.[0] ?? null
+              const problem = file ? mediaFileError(file) : null
+              setFileError(problem)
+              if (!problem) onPickFile(file)
               e.target.value = ''
             }}
             className="sr-only"
           />
         </label>
       )}
+      {fileError && <p className="text-sm text-rose-600">{fileError}</p>}
     </fieldset>
   )
 }

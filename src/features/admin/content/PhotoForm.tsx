@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import {
+  isVideoFile,
+  isVideoPath,
+  MEDIA_ACCEPT,
+  mediaFileError,
+} from '../../../lib/media'
 import { removeChapterPhotos, uploadChapterPhoto } from '../../../lib/storage'
 import { adminCreateBlock, adminUpdateBlock, type ChapterBlockRow } from '../api'
 import { getErrorMessage } from '../../../lib/errors'
@@ -44,6 +50,9 @@ export function PhotoForm({
   )
 
   function pickFile(next: File | null) {
+    const problem = next ? mediaFileError(next) : null
+    setError(problem)
+    if (problem) return
     if (previewRef.current) URL.revokeObjectURL(previewRef.current)
     previewRef.current = next ? URL.createObjectURL(next) : null
     setFile(next)
@@ -53,7 +62,7 @@ export function PhotoForm({
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     if (!photo && !file) {
-      setError('Vyber fotku.')
+      setError('Vyber fotku alebo video.')
       return
     }
     const gateError = isStep ? gate.validate() : null
@@ -90,24 +99,37 @@ export function PhotoForm({
   }
 
   const shown = previewUrl ?? currentUrl
+  const video = file ? isVideoFile(file) : isVideoPath(photo?.storage_path)
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {shown && (
-        <img src={shown} alt="" className="max-h-72 w-full rounded-lg object-contain" />
-      )}
+      {shown &&
+        (video ? (
+          <video
+            src={shown}
+            controls
+            playsInline
+            className="max-h-72 w-full rounded-lg bg-black"
+          />
+        ) : (
+          <img src={shown} alt="" className="max-h-72 w-full rounded-lg object-contain" />
+        ))}
 
       <label className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-[var(--paper-border)] px-3 py-3 text-sm text-[var(--color-accent)] hover:bg-white/30">
-        {photo ? 'Vymeniť fotku' : shown ? 'Vybrať inú fotku' : '+ Vybrať fotku'}
+        {photo
+          ? 'Vymeniť fotku / video'
+          : shown
+            ? 'Vybrať iný súbor'
+            : '+ Vybrať fotku alebo video'}
         <input
           type="file"
-          accept="image/png,image/jpeg,image/webp"
+          accept={MEDIA_ACCEPT}
           onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
           className="sr-only"
         />
       </label>
 
-      <Field label="Popis k fotke" hint="Voliteľné — zobrazí sa pod fotkou.">
+      <Field label="Popis" hint="Voliteľné — zobrazí sa pod fotkou alebo videom.">
         <textarea
           value={caption}
           onChange={(e) => setCaption(e.target.value)}

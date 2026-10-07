@@ -1,4 +1,11 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { MediaThumb } from '../../../components/MediaThumb'
+import {
+  isVideoFile,
+  isVideoPath,
+  MEDIA_ACCEPT,
+  mediaFileError,
+} from '../../../lib/media'
 import { removeChapterPhotos, uploadChapterPhoto } from '../../../lib/storage'
 import {
   adminCreateBlock,
@@ -68,7 +75,10 @@ export function StoryForm({
   )
 
   function addFiles(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? [])
+    const picked = Array.from(event.target.files ?? [])
+    const problem = picked.map(mediaFileError).find(Boolean)
+    setError(problem ?? null)
+    const files = picked.filter((file) => !mediaFileError(file))
     setAdded((prev) => [
       ...prev,
       ...files.map((file) => ({
@@ -167,12 +177,13 @@ export function StoryForm({
       </Field>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium">Fotky k príbehu</span>
+        <span className="text-sm font-medium">Fotky a videá k príbehu</span>
 
         {existing.map((p, i) => (
           <PhotoRow
             key={p.block.id}
             src={p.block.storage_path ? photoUrls[p.block.storage_path] : undefined}
+            video={isVideoPath(p.block.storage_path)}
             caption={p.caption}
             removed={p.remove}
             onCaption={(caption) =>
@@ -190,6 +201,7 @@ export function StoryForm({
           <PhotoRow
             key={p.previewUrl}
             src={p.previewUrl}
+            video={isVideoFile(p.file)}
             caption={p.caption}
             isNew
             onCaption={(caption) =>
@@ -203,10 +215,10 @@ export function StoryForm({
         ))}
 
         <label className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-[var(--paper-border)] px-3 py-3 text-sm text-[var(--color-accent)] hover:bg-white/30">
-          + Pridať fotku k príbehu
+          + Pridať fotku alebo video k príbehu
           <input
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept={MEDIA_ACCEPT}
             multiple
             onChange={addFiles}
             className="sr-only"
@@ -225,6 +237,7 @@ export function StoryForm({
 
 function PhotoRow({
   src,
+  video,
   caption,
   removed = false,
   isNew = false,
@@ -232,6 +245,7 @@ function PhotoRow({
   onToggleRemove,
 }: {
   src?: string
+  video: boolean
   caption: string
   removed?: boolean
   isNew?: boolean
@@ -243,7 +257,7 @@ function PhotoRow({
       className={`flex items-center gap-3 rounded-lg border border-[var(--paper-border)] p-2 ${removed ? 'opacity-40' : ''}`}
     >
       {src ? (
-        <img src={src} alt="" className="h-14 w-14 shrink-0 rounded object-cover" />
+        <MediaThumb src={src} video={video} />
       ) : (
         <div className="h-14 w-14 shrink-0 rounded bg-black/10" />
       )}
@@ -251,7 +265,7 @@ function PhotoRow({
         value={caption}
         onChange={(e) => onCaption(e.target.value)}
         disabled={removed}
-        placeholder="Popis k fotke (voliteľné)"
+        placeholder={video ? 'Popis k videu (voliteľné)' : 'Popis k fotke (voliteľné)'}
         className={`${inputClass} text-sm`}
       />
       <button

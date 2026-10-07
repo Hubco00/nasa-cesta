@@ -1,3 +1,4 @@
+import { contentTypeFor, isVideoFile } from './media'
 import { supabase } from './supabase'
 
 const BUCKET = 'chapter-photos'
@@ -27,13 +28,17 @@ export async function getSignedPhotoUrls(
   return result
 }
 
-/** Admin-only: nahrá fotku do privátneho bucketu, vráti storage_path pre chapter_blocks. */
+/**
+ * Admin-only: nahrá fotku alebo video do privátneho bucketu, vráti storage_path
+ * pre chapter_blocks. Prípona sa zachová — podľa nej sa video spozná pri zobrazení.
+ */
 export async function uploadChapterPhoto(chapterId: string, file: File): Promise<string> {
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const ext =
+    file.name.split('.').pop()?.toLowerCase() || (isVideoFile(file) ? 'mp4' : 'jpg')
   const path = `${chapterId}/${crypto.randomUUID()}.${ext}`
 
   const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
-    contentType: file.type,
+    contentType: contentTypeFor(file),
     upsert: false,
   })
   if (error) throw error
