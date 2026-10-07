@@ -184,6 +184,10 @@ insertom do `auth.users` — iba cez Supabase Auth:
      správna odpoveď, nápoveda, a **list po správnej** aj **po nesprávnej**
      odpovedi — každý s voliteľnou fotkou ako odmenou. Listy a fotky sa
      hráčke vydajú až po odpovedi (server), takže vopred neprezradia odpoveď.
+     Pri písanej odpovedi je (pre nové otázky zapnutá) voľba **„Je toto, čo si
+     mala na mysli?“** — po zlej odpovedi jej server ukáže prvú zo správnych
+     odpovedí; **Áno** = otázka sa počíta ako správna, **Nie** = list po zlej
+     odpovedi a skúša znova.
      Typ **Ukáže na mape** — vyberieš správne miesto na skutočnej mape
      (OpenStreetMap, vyhľadávanie cez Nominatim) a toleranciu (25 m – 25 km);
      hráčka ťukne na mapu a server overí vzdialenosť. Pri zlej odpovedi uvidí

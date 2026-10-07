@@ -36,6 +36,8 @@ export interface BlockQuestionConfig {
   type?: 'text' | 'choice' | 'place'
   options?: string[]
   hint?: string
+  /** Pri zlej písanej odpovedi ukázať správnu: „Je toto, čo si mala na mysli?“ */
+  offerCorrectAnswer?: boolean
 }
 
 export interface VerifyAnswerResult {

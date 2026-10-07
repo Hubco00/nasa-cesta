@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { renderMarkdownSafe } from '../../lib/security'
 import { LetterPhotos } from '../chapters/PhotoFigure'
 import {
+  acceptAnswerSuggestion,
   fetchBlockSolved,
   fetchQuestionOutcome,
   verifyBlockAnswer,
@@ -16,7 +17,8 @@ import { formatDistance, type LatLng } from '../places/types'
 // Leaflet sa načíta až keď hráčka otvorí mapu.
 const PlacePickerOverlay = lazy(() => import('../places/PlacePickerOverlay'))
 
-type State = 'loading' | 'open' | 'wrong' | 'solved'
+// 'suggest' — zlá písaná odpoveď, ponúkame správnu: „Je toto, čo si mala na mysli?“
+type State = 'loading' | 'open' | 'wrong' | 'suggest' | 'solved'
 
 export function BlockQuestion({
   block,
@@ -30,6 +32,7 @@ export function BlockQuestion({
   const options = config.type === 'choice' ? (config.options ?? []) : []
   const isPlace = config.type === 'place'
   const [state, setState] = useState<State>('loading')
+  const [suggestion, setSuggestion] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<ChapterBlock | null>(null)
   const [answer, setAnswer] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -66,7 +69,13 @@ export function BlockQuestion({
     setSubmitting(true)
     setError(false)
     try {
-      const { correct, unlockedChapters } = await verify()
+      const { correct, unlockedChapters, suggestion: offered } = await verify()
+      if (!correct && offered) {
+        // List po zlej odpovedi až keď povie, že toto nemala na mysli.
+        setSuggestion(offered)
+        setState('suggest')
+        return true
+      }
       await showOutcome(correct ? 'correct' : 'wrong')
       setUnlocked(unlockedChapters)
       setState(correct ? 'solved' : 'wrong')
@@ -78,6 +87,18 @@ export function BlockQuestion({
     } finally {
       setSubmitting(false)
     }
+  }
+
+  /** Áno — správna odpoveď je to, čo mala na mysli. */
+  function acceptSuggestion() {
+    void submit(() => acceptAnswerSuggestion(block.id))
+  }
+
+  /** Nie — zlá odpoveď so všetkým, čo k nej patrí (list, nápoveda, skúsiť znova). */
+  async function declineSuggestion() {
+    setSuggestion(null)
+    await showOutcome('wrong')
+    setState('wrong')
   }
 
   function handleSubmit(event: FormEvent) {
@@ -179,7 +200,42 @@ export function BlockQuestion({
           </Suspense>
         )}
 
-        {state !== 'solved' && !isPlace && (
+        {state === 'suggest' && suggestion && (
+          <div className="animate-unlock mt-4 flex flex-col gap-3">
+            <p className="text-sm opacity-80">
+              Napísala si „{answer.trim()}“. Správna odpoveď je:
+            </p>
+            <p className="rounded-lg border border-[var(--paper-border)] bg-white/40 px-3 py-2.5 text-lg font-medium">
+              {suggestion}
+            </p>
+            <p>Je toto, čo si mala na mysli?</p>
+            {error && (
+              <p className="text-sm text-rose-700">
+                Odpoveď sa nepodarilo overiť, skús znova.
+              </p>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={acceptSuggestion}
+                disabled={submitting}
+                className="rounded-lg bg-[var(--color-accent)] px-4 py-2.5 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+              >
+                {submitting ? 'Moment…' : 'Áno'}
+              </button>
+              <button
+                type="button"
+                onClick={() => void declineSuggestion()}
+                disabled={submitting}
+                className="rounded-lg border border-[var(--color-accent)] px-4 py-2.5 font-medium text-[var(--color-accent)] disabled:opacity-50"
+              >
+                Nie
+              </button>
+            </div>
+          </div>
+        )}
+
+        {state !== 'solved' && state !== 'suggest' && !isPlace && (
           <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
             {options.length > 0 ? (
               <div className="flex flex-col gap-2">

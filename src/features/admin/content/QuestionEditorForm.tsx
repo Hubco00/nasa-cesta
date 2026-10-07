@@ -63,6 +63,10 @@ export function QuestionEditorForm({
   )
   const [correctIndex, setCorrectIndex] = useState<number | null>(null)
   const [hint, setHint] = useState(config.hint ?? '')
+  // Nové otázky ju majú zapnutú — pri písanej odpovedi sa ľahko stane preklep.
+  const [offerCorrect, setOfferCorrect] = useState(
+    question ? Boolean(config.offerCorrectAnswer) : true,
+  )
   const existingOutcome = (result: Result) => outcomes.find((o) => o.reveal_on === result)
   const [drafts, setDrafts] = useState<Record<Result, OutcomeDraft>>(() => ({
     correct: draftFrom(existingOutcome('correct')),
@@ -173,6 +177,7 @@ export function QuestionEditorForm({
       type: mode,
       ...(mode === 'choice' ? { options: cleanOptions } : {}),
       ...(hint.trim() ? { hint: hint.trim() } : {}),
+      ...(mode === 'text' && offerCorrect ? { offerCorrectAnswer: true } : {}),
     }
 
     setSaving(true)
@@ -259,18 +264,35 @@ export function QuestionEditorForm({
           help="Hráčka musí ťuknúť do tolerancie od tohto miesta. Pri zlej odpovedi uvidí, približne ako ďaleko bola — súradnice správneho miesta nie."
         />
       ) : mode === 'text' ? (
-        <Field
-          label="Správna odpoveď"
-          hint="Viac možných odpovedí oddeľ čiarkou. Veľké/malé písmená a medzery sa ignorujú."
-        >
-          <input
-            value={textAnswers}
-            onChange={(e) => setTextAnswers(e.target.value)}
-            disabled={loadingAnswer}
-            placeholder={loadingAnswer ? 'Načítavam…' : 'napr. káva, kávu'}
-            className={inputClass}
-          />
-        </Field>
+        <>
+          <Field
+            label="Správna odpoveď"
+            hint="Viac možných odpovedí oddeľ čiarkou. Veľké/malé písmená a medzery sa ignorujú."
+          >
+            <input
+              value={textAnswers}
+              onChange={(e) => setTextAnswers(e.target.value)}
+              disabled={loadingAnswer}
+              placeholder={loadingAnswer ? 'Načítavam…' : 'napr. káva, kávu'}
+              className={inputClass}
+            />
+          </Field>
+          <label className="-mt-2 flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={offerCorrect}
+              onChange={(e) => setOfferCorrect(e.target.checked)}
+              className="mt-1"
+            />
+            <span>
+              Pri zlej odpovedi jej ukázať správnu a opýtať sa „Je toto, čo si mala na
+              mysli?“
+              <span className="block text-xs text-[var(--color-muted)]">
+                Áno = otázka sa počíta ako správna. Ukáže sa prvá zo správnych odpovedí.
+              </span>
+            </span>
+          </label>
+        </>
       ) : (
         <div className="flex flex-col gap-2 text-sm">
           <span className="font-medium">Možnosti — označ správnu</span>

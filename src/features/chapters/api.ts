@@ -150,6 +150,8 @@ export interface BlockAnswerResult {
   correct: boolean
   /** Kapitoly, ktoré sa touto správnou odpoveďou práve odomkli. */
   unlockedChapters: { title: string; slug: string }[]
+  /** Po zlej odpovedi správna odpoveď na potvrdenie (ak ju admin povolil). */
+  suggestion?: string | null
 }
 
 export async function verifyBlockAnswer(
@@ -165,7 +167,20 @@ export async function verifyBlockAnswer(
   return {
     correct: Boolean(result.correct),
     unlockedChapters: result.unlockedChapters ?? [],
+    suggestion: result.suggestion ?? null,
   }
+}
+
+/** „Áno, toto som mala na mysli“ — otázka sa počíta ako správna. */
+export async function acceptAnswerSuggestion(
+  blockId: string,
+): Promise<BlockAnswerResult> {
+  const { data, error } = await supabase.rpc('accept_block_answer_suggestion', {
+    p_block_id: blockId,
+  })
+  if (error) throw error
+  const result = (data ?? {}) as Partial<BlockAnswerResult>
+  return { correct: true, unlockedChapters: result.unlockedChapters ?? [] }
 }
 
 export interface BlockPlaceResult extends BlockAnswerResult {

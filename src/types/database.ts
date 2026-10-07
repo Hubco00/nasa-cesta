@@ -828,6 +828,10 @@ export type Database = {
       }
     }
     Functions: {
+      accept_block_answer_suggestion: {
+        Args: { p_block_id: string }
+        Returns: Json
+      }
       admin_delete_chapter: {
         Args: { p_chapter_id: string }
         Returns: string[]
