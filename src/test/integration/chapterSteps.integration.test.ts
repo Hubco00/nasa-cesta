@@ -128,6 +128,16 @@ describe.skipIf(!isLocalSupabaseUp)('kapitola po krokoch (lokálny Supabase)', (
     expect(early.error?.message).toContain('kroky kapitoly')
   })
 
+  it('admin si v náhľade vyskúša aj neskorší krok, hráčke sa tým nič neodomkne', async () => {
+    const { data: visible } = await admin.rpc('block_is_visible', { p_block_id: photo })
+    expect(visible).toBe(true)
+    const { data: forPlayer } = await player.rpc('block_is_visible', {
+      p_block_id: photo,
+    })
+    expect(forPlayer).toBe(false)
+    expect(await visibleSteps()).toEqual([story])
+  })
+
   it('„Ďalej“ odomkne ďalší krok', async () => {
     const { error } = await player.rpc('complete_block_step', { p_block_id: story })
     expect(error).toBeNull()
