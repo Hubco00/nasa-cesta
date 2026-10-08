@@ -1,0 +1,17 @@
+// Nasadenie na Cloudflare (Workers so statickými súbormi), automaticky z GitHubu
+// po každom pushi na main. Cloudflare spustí `npm run build` a nahrá priečinok dist.
+// VITE_SUPABASE_URL a VITE_SUPABASE_ANON_KEY sú v Cloudflare v
+// Settings → Build → Variables and secrets (Vite ich potrebuje pri builde).
+// service_role kľúč sem ani do Cloudflare nikdy nepatrí.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Musí sa zhodovať s názvom projektu v Cloudflare.
+  "name": "nasa-cesta",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // Odkaz priamo na kapitolu (/chapters/…) vráti appku, nie 404.
+    "not_found_handling": "single-page-application",
+  },
+  "vars": {},
+}
