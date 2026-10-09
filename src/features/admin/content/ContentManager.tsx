@@ -440,9 +440,9 @@ function ItemCard({
 
       {preview?.storage_path && photoUrls[preview.storage_path] && (
         <PhotoLightbox
-          src={photoUrls[preview.storage_path]}
-          alt=""
-          caption={preview.caption}
+          photos={[
+            { src: photoUrls[preview.storage_path], alt: '', caption: preview.caption },
+          ]}
           video={isVideoPath(preview.storage_path)}
           onClose={() => setPreview(null)}
         />

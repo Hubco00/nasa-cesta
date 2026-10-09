@@ -9,23 +9,29 @@ interface PhotoProps {
   caption?: string | null
 }
 
-function useSignedUrl(storagePath: string) {
-  const [url, setUrl] = useState<string | null>(null)
+function useSignedUrls(storagePaths: string[]) {
+  const key = storagePaths.join('\n')
+  const [urls, setUrls] = useState<Record<string, string>>({})
   const [attempt, setAttempt] = useState(0)
   useEffect(() => {
     let active = true
-    getSignedPhotoUrls([storagePath]).then((urls) => {
-      if (active) setUrl(urls[storagePath] ?? null)
+    getSignedPhotoUrls(key ? key.split('\n') : []).then((signed) => {
+      if (active) setUrls(signed)
     })
     return () => {
       active = false
     }
-  }, [storagePath, attempt])
+  }, [key, attempt])
   // Podpísaná URL platí 5 minút — video spustené neskôr si vypýta novú (raz).
   const refresh = () => {
     if (attempt === 0) setAttempt(1)
   }
-  return { url, refresh }
+  return { urls, refresh }
+}
+
+function useSignedUrl(storagePath: string) {
+  const { urls, refresh } = useSignedUrls([storagePath])
+  return { url: urls[storagePath] ?? null, refresh }
 }
 
 /** Video priamo v liste — prehrá sa na mieste, so zvukom a ovládaním. */
@@ -93,9 +99,7 @@ export function PhotoFigure({ storagePath, alt, caption }: PhotoProps) {
       )}
       {open && url && !video && (
         <PhotoLightbox
-          src={url}
-          alt={alt ?? ''}
-          caption={caption}
+          photos={[{ src: url, alt: alt ?? '', caption }]}
           onClose={() => setOpen(false)}
         />
       )}
@@ -108,14 +112,39 @@ export function PhotoFigure({ storagePath, alt, caption }: PhotoProps) {
  * fotka priložená k listu. Jedna fotka na celú šírku, viac v mriežke.
  */
 export function LetterPhotos({ photos }: { photos: PhotoProps[] }) {
+  const { urls, refresh } = useSignedUrls(photos.map((p) => p.storagePath))
+  const [open, setOpen] = useState<number | null>(null)
   if (photos.length === 0) return null
   const grid = photos.length > 1
+
+  // Na celej obrazovke sa listuje iba medzi fotkami — videá sa hrajú v liste.
+  const gallery = photos
+    .filter((p) => !isVideoPath(p.storagePath) && urls[p.storagePath])
+    .map((p) => ({
+      storagePath: p.storagePath,
+      src: urls[p.storagePath],
+      alt: p.alt ?? '',
+      caption: p.caption,
+    }))
 
   return (
     <div className={`mt-5 grid gap-4 ${grid ? 'grid-cols-2' : 'grid-cols-1'}`}>
       {photos.map((photo) => (
-        <LetterPhoto key={photo.storagePath} {...photo} square={grid} />
+        <LetterPhoto
+          key={photo.storagePath}
+          {...photo}
+          url={urls[photo.storagePath] ?? null}
+          refresh={refresh}
+          square={grid}
+          onOpen={() => {
+            const i = gallery.findIndex((g) => g.storagePath === photo.storagePath)
+            if (i >= 0) setOpen(i)
+          }}
+        />
       ))}
+      {open !== null && (
+        <PhotoLightbox photos={gallery} startIndex={open} onClose={() => setOpen(null)} />
+      )}
     </div>
   )
 }
@@ -124,10 +153,16 @@ function LetterPhoto({
   storagePath,
   alt,
   caption,
+  url,
+  refresh,
   square,
-}: PhotoProps & { square: boolean }) {
-  const { url, refresh } = useSignedUrl(storagePath)
-  const [open, setOpen] = useState(false)
+  onOpen,
+}: PhotoProps & {
+  url: string | null
+  refresh: () => void
+  square: boolean
+  onOpen: () => void
+}) {
   const aspect = square ? 'aspect-square' : 'aspect-[4/3]'
 
   if (isVideoPath(storagePath)) {
@@ -158,7 +193,7 @@ function LetterPhoto({
     <figure className="flex flex-col gap-1.5">
       <button
         type="button"
-        onClick={() => url && setOpen(true)}
+        onClick={() => url && onOpen()}
         aria-label="Zobraziť fotku na celú obrazovku"
         className="relative block cursor-zoom-in rounded-sm bg-white/60 p-1.5 shadow-[0_6px_14px_-8px_rgba(74,26,36,0.55)] ring-1 ring-[var(--paper-border)] dark:bg-white/10"
       >
@@ -178,14 +213,6 @@ function LetterPhoto({
         <figcaption className="px-1 text-center text-sm italic leading-snug opacity-80">
           {caption}
         </figcaption>
-      )}
-      {open && url && (
-        <PhotoLightbox
-          src={url}
-          alt={alt ?? ''}
-          caption={caption}
-          onClose={() => setOpen(false)}
-        />
       )}
     </figure>
   )

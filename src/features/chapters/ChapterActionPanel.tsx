@@ -13,9 +13,12 @@ const QrChapterUnlock = lazy(() =>
 
 export function ChapterActionPanel({
   chapter,
+  preview = false,
   onCompleted,
 }: {
   chapter: ChapterDetail
+  /** Admin v náhľade preskočil kroky kapitoly. */
+  preview?: boolean
   onCompleted: () => void
 }) {
   const chapterId = chapter.id
@@ -27,6 +30,7 @@ export function ChapterActionPanel({
         <ManualStep
           chapterId={chapterId}
           successMessage={chapter.success_message}
+          preview={preview}
           onCompleted={onCompleted}
         />
       )

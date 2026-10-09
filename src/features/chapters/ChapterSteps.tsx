@@ -162,7 +162,11 @@ export function ChapterSteps({
             ✓ Táto kapitola je splnená.
           </p>
         ) : (
-          <ChapterActionPanel chapter={chapter} onCompleted={onChapterCompleted} />
+          <ChapterActionPanel
+            chapter={chapter}
+            preview={isAdmin && steps.some((s) => !solved.has(s.id))}
+            onCompleted={onChapterCompleted}
+          />
         )}
 
         {step && needsLocation && (
