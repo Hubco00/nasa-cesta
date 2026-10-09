@@ -15,14 +15,16 @@ function useSignedUrls(storagePaths: string[]) {
   const [attempt, setAttempt] = useState(0)
   useEffect(() => {
     let active = true
-    getSignedPhotoUrls(key ? key.split('\n') : []).then((signed) => {
-      if (active) setUrls(signed)
-    })
+    getSignedPhotoUrls(key ? key.split('\n') : [], { fresh: attempt > 0 }).then(
+      (signed) => {
+        if (active) setUrls(signed)
+      },
+    )
     return () => {
       active = false
     }
   }, [key, attempt])
-  // Podpísaná URL platí 5 minút — video spustené neskôr si vypýta novú (raz).
+  // Keď URL predsa neplatí (napr. vypršala), video si vypýta novú (raz).
   const refresh = () => {
     if (attempt === 0) setAttempt(1)
   }

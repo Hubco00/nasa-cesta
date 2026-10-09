@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import { useEffect, useState, type ReactNode } from 'react'
+import { clearSignedUrlCache } from '../../lib/storage'
 import { supabase } from '../../lib/supabase'
 import { AuthContext, type AuthContextValue } from './auth-context'
 
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signOut: async () => {
       await supabase.auth.signOut()
+      clearSignedUrlCache()
     },
   }
 
