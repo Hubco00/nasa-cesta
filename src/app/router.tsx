@@ -8,6 +8,7 @@ import { ChapterDetailPage } from '../pages/ChapterDetailPage'
 import { ChaptersPage } from '../pages/ChaptersPage'
 import { LoginPage } from '../pages/LoginPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
+import { RouteErrorPage } from '../pages/RouteErrorPage'
 
 // Admin rozhranie sa bežnej hráčke nikdy nenačíta — samostatný chunk, aby
 // nezväčšovalo úvodný bundle jej časti appky.
@@ -47,28 +48,34 @@ function adminRoute(element: ReactNode) {
 }
 
 export const router = createBrowserRouter([
-  { path: '/', element: <Navigate to="/chapters" replace /> },
-  { path: '/login', element: <LoginPage /> },
   {
-    path: '/chapters',
-    element: (
-      <RequireAuth>
-        <ChaptersPage />
-      </RequireAuth>
-    ),
+    // Chyba ktorejkoľvek stránky — namiesto vývojárskej hlášky React Routera.
+    errorElement: <RouteErrorPage />,
+    children: [
+      { path: '/', element: <Navigate to="/chapters" replace /> },
+      { path: '/login', element: <LoginPage /> },
+      {
+        path: '/chapters',
+        element: (
+          <RequireAuth>
+            <ChaptersPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/chapters/:slug',
+        element: (
+          <RequireAuth>
+            <ChapterDetailPage />
+          </RequireAuth>
+        ),
+      },
+      { path: '/admin', element: adminRoute(<AdminPage />) },
+      { path: '/admin/players', element: adminRoute(<PlayersPage />) },
+      { path: '/admin/mapa', element: adminRoute(<RoadMapEditorPage />) },
+      { path: '/admin/chapters/new', element: adminRoute(<ChapterEditorPage />) },
+      { path: '/admin/chapters/:id', element: adminRoute(<ChapterEditorPage />) },
+      { path: '*', element: <NotFoundPage /> },
+    ],
   },
-  {
-    path: '/chapters/:slug',
-    element: (
-      <RequireAuth>
-        <ChapterDetailPage />
-      </RequireAuth>
-    ),
-  },
-  { path: '/admin', element: adminRoute(<AdminPage />) },
-  { path: '/admin/players', element: adminRoute(<PlayersPage />) },
-  { path: '/admin/mapa', element: adminRoute(<RoadMapEditorPage />) },
-  { path: '/admin/chapters/new', element: adminRoute(<ChapterEditorPage />) },
-  { path: '/admin/chapters/:id', element: adminRoute(<ChapterEditorPage />) },
-  { path: '*', element: <NotFoundPage /> },
 ])
