@@ -44,6 +44,18 @@ export async function promptInstall(): Promise<boolean> {
   return outcome === 'accepted'
 }
 
+export function isIos(): boolean {
+  // iPadOS sa hlási ako Mac — prezradí ho až dotyková obrazovka.
+  return (
+    /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
+  )
+}
+
+export function isMobile(): boolean {
+  return isIos() || /Android/i.test(navigator.userAgent)
+}
+
 /** Beží už ako nainštalovaná appka (bez lišty prehliadača)? */
 export function isStandalone(): boolean {
   return (
