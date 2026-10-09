@@ -97,10 +97,15 @@ export function client(url, serviceKey) {
       return Buffer.from(await res.arrayBuffer())
     },
 
-    async upload(path, data, contentType) {
+    async upload(path, data, contentType, cacheSeconds = 31536000) {
       await request(`/storage/v1/object/${BUCKET}/${encodePath(path)}`, {
         method: 'POST',
-        headers: { 'Content-Type': contentType, 'x-upsert': 'true' },
+        // Cesty sú UUID a súbor sa nemení — dlhá cache šetrí egress.
+        headers: {
+          'Content-Type': contentType,
+          'x-upsert': 'true',
+          'cache-control': `max-age=${cacheSeconds}`,
+        },
         body: data,
       })
     },

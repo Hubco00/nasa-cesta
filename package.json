@@ -16,7 +16,8 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:reset": "supabase db reset && sh supabase/seed-storage.sh",
     "backup": "node scripts/backup.mjs",
-    "restore": "node scripts/restore.mjs"
+    "restore": "node scripts/restore.mjs",
+    "set-cache-control": "node scripts/set-cache-control.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
