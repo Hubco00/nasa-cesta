@@ -7,7 +7,8 @@ const BUCKET = 'chapter-photos'
 // v Supabase ráta do egressu, na Free pláne 5 GB mesačne).
 const SIGNED_URL_TTL_SECONDS = 7 * 24 * 60 * 60
 const SIGNED_URL_MIN_LEFT_MS = 24 * 60 * 60 * 1000
-const URL_CACHE_KEY = 'signed-photo-urls'
+// Podľa projektu — po presune na iný Supabase projekt sa staré URL nepoužijú.
+const URL_CACHE_KEY = `signed-photo-urls:${import.meta.env.VITE_SUPABASE_URL ?? ''}`
 
 type UrlCache = Record<string, { url: string; expiresAt: number }>
 
