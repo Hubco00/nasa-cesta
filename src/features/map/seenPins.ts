@@ -1,24 +1,23 @@
-// Ktoré miesta na mape už hráčka otvorila — iba lokálne na zariadení, slúži
-// len na notifikačné guličky. Pri nedostupnom localStorage (súkromné okno,
-// zablokované úložisko) sa všetko jednoducho javí ako neotvorené.
-const STORAGE_KEY = 'nasa-cesta:seen-map-pins'
+import { supabase } from '../../lib/supabase'
 
-export function loadSeenPins(): Set<string> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return new Set(raw ? (JSON.parse(raw) as string[]) : [])
-  } catch {
-    return new Set()
-  }
+// Ktoré miesta na mape už hráčka otvorila — v databáze, aby ich reset postupu
+// vynuloval a platili na každom zariadení. Slúži iba na notifikačné guličky.
+
+export async function fetchSeenPins(pinIds: string[]): Promise<Set<string>> {
+  const { data: auth } = await supabase.auth.getSession()
+  const playerId = auth.session?.user.id
+  if (pinIds.length === 0 || !playerId) return new Set()
+  // Admin číta (RLS) aj záznamy hráčky — preto iba vlastné.
+  const { data, error } = await supabase
+    .from('player_map_pin_views')
+    .select('pin_id')
+    .eq('player_id', playerId)
+    .in('pin_id', pinIds)
+  if (error) throw error
+  return new Set((data ?? []).map((row) => row.pin_id))
 }
 
-export function markPinSeen(pinId: string): Set<string> {
-  const seen = loadSeenPins()
-  seen.add(pinId)
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...seen]))
-  } catch {
-    // úložisko nedostupné — gulička sa zobrazí znova pri ďalšom načítaní
-  }
-  return seen
+export async function markPinSeen(pinId: string): Promise<void> {
+  const { error } = await supabase.rpc('mark_map_pin_seen', { p_pin_id: pinId })
+  if (error) throw error
 }

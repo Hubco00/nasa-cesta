@@ -6,7 +6,7 @@ import { ChapterBlockRenderer } from '../chapters/ChapterBlockRenderer'
 import { fetchPinBlocks } from '../chapters/api'
 import type { ChapterBlock, MapPin } from '../chapters/types'
 import { findCity, MAP_IMAGE_HEIGHT, MAP_IMAGE_SRC, MAP_IMAGE_WIDTH } from './cities'
-import { loadSeenPins, markPinSeen } from './seenPins'
+import { fetchSeenPins, markPinSeen } from './seenPins'
 
 export function ChapterMap({
   pins,
@@ -16,12 +16,36 @@ export function ChapterMap({
   chapterTitle: string
 }) {
   const [open, setOpen] = useState(false)
-  const [seen, setSeen] = useState<Set<string>>(() => loadSeenPins())
+  // null = ešte sa načítava — bez čísla, aby neblikli všetky miesta ako nové.
+  const [seen, setSeen] = useState<Set<string> | null>(null)
 
   const visiblePins = pins.filter((p) => findCity(p.city_key))
+  const pinKey = visiblePins.map((p) => p.id).join(',')
+
+  useEffect(() => {
+    let active = true
+    fetchSeenPins(pinKey ? pinKey.split(',') : [])
+      .then((ids) => {
+        if (active) setSeen(ids)
+      })
+      .catch(() => {
+        if (active) setSeen(new Set())
+      })
+    return () => {
+      active = false
+    }
+  }, [pinKey])
+
   if (visiblePins.length === 0) return null
 
-  const unseenCount = visiblePins.filter((p) => !seen.has(p.id)).length
+  const seenPins = seen ?? new Set<string>()
+  const unseenCount = seen ? visiblePins.filter((p) => !seen.has(p.id)).length : 0
+
+  function onSeen(pinId: string) {
+    setSeen((prev) => new Set(prev).add(pinId))
+    // Nepodarený zápis — gulička sa ukáže znova pri ďalšom otvorení kapitoly.
+    markPinSeen(pinId).catch(() => {})
+  }
 
   return (
     <>
@@ -45,9 +69,9 @@ export function ChapterMap({
         createPortal(
           <MapOverlay
             pins={visiblePins}
-            seen={seen}
+            seen={seenPins}
             chapterTitle={chapterTitle}
-            onSeen={(id) => setSeen(markPinSeen(id))}
+            onSeen={onSeen}
             onClose={() => setOpen(false)}
           />,
           document.body,

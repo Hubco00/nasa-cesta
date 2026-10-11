@@ -560,6 +560,32 @@ export type Database = {
           },
         ]
       }
+      player_map_pin_views: {
+        Row: {
+          pin_id: string
+          player_id: string
+          seen_at: string
+        }
+        Insert: {
+          pin_id: string
+          player_id: string
+          seen_at?: string
+        }
+        Update: {
+          pin_id?: string
+          player_id?: string
+          seen_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'player_map_pin_views_pin_id_fkey'
+            columns: ['pin_id']
+            isOneToOne: false
+            referencedRelation: 'chapter_map_pins'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       player_progress: {
         Row: {
           attempt_count: number
@@ -946,6 +972,7 @@ export type Database = {
         Args: { p_block_id: string }
         Returns: undefined
       }
+      mark_map_pin_seen: { Args: { p_pin_id: string }; Returns: undefined }
       normalize_answer: { Args: { p_answer: string }; Returns: string }
       tutorial_pending: { Args: never; Returns: boolean }
       verify_answer: {
